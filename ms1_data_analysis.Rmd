@@ -1,0 +1,28 @@
+---
+title: "Data Analysis"
+author: "Piotr Szefer"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+## General effects of biotic factors
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+source('code/log_ratio_extraction.R')
+source('code/log_ratio_tests.R')
+
+# Overdispersion test for the density in the fungicide treatment
+lrdata <- DENSITY.LR
+lvT <- leveneTest(lratio ~ site, data = lrdata %>% filter(treatment == "f"))
+lvtpval <- lvT$`Pr(>F)`[1]
+
+```
