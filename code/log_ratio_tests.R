@@ -1,4 +1,6 @@
-# This file is obsolete. Delete and use only for the test.
+# This file is obsolete. Use only for the test
+
+# This may be used to produce labels for the log-ratio comparison figure.
 
 # rm(list = ls())
 # source("code/log_ratio_extraction.R")
@@ -21,68 +23,9 @@ library(multcompView)
 lrdata <- BIOMASS.LR
 treatment_code <- "f"
 
-calculateTest <- function(lrdata, treatment_code = "f"){
-  # Specific wrapper around testing procedure
-
-  # Filter data
-  trtdata  <- lrdata %>%
-    filter(treatment == treatment_code)
-
-  ltest.p <- leveneTest(lratio ~ site, data =  trtdata)
-  btest.p <- bartlett.test(lratio ~ site, data =  trtdata)
-  print(ltest.p)
-  print(btest.p)
-  
-  # If the varianvces are unequal then perform GLS
-  if(ltest.p$`Pr(>F)`[1] < 0.05){
-    
-    trtlm <- gls(lratio ~ 0 + site, data = trtdata,
-                 weights = varIdent(form = ~1|site))
-    summary(trtlm)
-    
-    print("Model runned")
-    
-    # Tukey post-hoc
-    emm <- emmeans::emmeans(object = trtlm, 
-                   specs = "site", 
-                   adjust = "wald")
-    
-    print("Post hoc runned")
-    
-    zero.dif <- ifelse(summary(trtlm)$tTable[,4] > 0.05, "","*")
-    print("zero.dif assigned")
-    
-    mod_means <- multcomp::cld(object = emm,
-                               Letters = letters)$.group
-    
-    paste(mod_means,zero.dif, sep = "") -> res
-    
-  }else{
-    trtlm <- lm(lratio ~ 0 + site, data = trtdata)
-    
-    # Tukey post-hoc
-    emm <- emmeans(object = trtlm, 
-                   specs = "site", 
-                   adjust = "wald")
-    
-    zero.dif <- ifelse(summary(trtlm)$coefficients[,4] > 0.05, "","*")
-    mod_means <- multcomp::cld(object = emm,
-                               Letters = letters)$.group
-    
-    paste(mod_means,zero.dif, sep = "") -> res
-  }
-  
-  # If all letter are the same then return empty vector
-  if(length(unique(res)) == 1){
-    res <- vector("character", length = 3)
-    } 
-  
-  return(res)
-
-}
 
 
-# calculateTest <- function(lrdata, treatment_code = "f"){
+# runTest <- function(lrdata, treatment_code = "f"){
 #   # Specific wrapper around testing procedure
 #   
 #   # Filter data
@@ -105,11 +48,11 @@ calculateTest <- function(lrdata, treatment_code = "f"){
 # 2.1) Tests for individual treatments
 
 # Biomasss
-f.test <- calculateTest(BIOMASS.LR, treatment_code = "f")
-# ch.test <- calculateTest(BIOMASS.LR, treatment_code = "ch")
-i.test <- calculateTest(BIOMASS.LR, treatment_code = "i")
-p.test <- calculateTest(BIOMASS.LR, treatment_code = "p")
-h.test <- calculateTest(BIOMASS.LR, treatment_code = "h")
+f.test <- runTest(BIOMASS.LR, treatment_code = "f")
+# ch.test <- runTest(BIOMASS.LR, treatment_code = "ch")
+i.test <- runTest(BIOMASS.LR, treatment_code = "i")
+p.test <- runTest(BIOMASS.LR, treatment_code = "p")
+h.test <- runTest(BIOMASS.LR, treatment_code = "h")
 
 
 
@@ -117,33 +60,33 @@ biotest_labels <- c(f.test, i.test, p.test, h.test)
 # biotest_labels <- c("","","","a*","b*","a","a*","a" ,"","","","a*","b","b")
 
 # Diversity
-f.test <- calculateTest(DIVERSITY.LR, treatment_code = "f")
-# ch.test <- calculateTest(DIVERSITY.LR, treatment_code = "ch")
-i.test <- calculateTest(DIVERSITY.LR, treatment_code = "i")
-p.test <- calculateTest(DIVERSITY.LR, treatment_code = "p")
-h.test <- calculateTest(DIVERSITY.LR, treatment_code = "h")
+f.test <- runTest(DIVERSITY.LR, treatment_code = "f")
+# ch.test <- runTest(DIVERSITY.LR, treatment_code = "ch")
+i.test <- runTest(DIVERSITY.LR, treatment_code = "i")
+p.test <- runTest(DIVERSITY.LR, treatment_code = "p")
+h.test <- runTest(DIVERSITY.LR, treatment_code = "h")
 
 
 divtest_labels <- c(f.test, i.test, p.test, h.test)
 # c("","","","","","a","a","a*" ,"a","a","a*","","","")
 
 # Richness
-f.test <- calculateTest(RICHNESS.LR, treatment_code = "f")
-# ch.test <- calculateTest(RICHNESS.LR, treatment_code = "ch")
-i.test <- calculateTest(RICHNESS.LR, treatment_code = "i")
-p.test <- calculateTest(RICHNESS.LR, treatment_code = "p")
-h.test <- calculateTest(RICHNESS.LR, treatment_code = "h")
+f.test <- runTest(RICHNESS.LR, treatment_code = "f")
+# ch.test <- runTest(RICHNESS.LR, treatment_code = "ch")
+i.test <- runTest(RICHNESS.LR, treatment_code = "i")
+p.test <- runTest(RICHNESS.LR, treatment_code = "p")
+h.test <- runTest(RICHNESS.LR, treatment_code = "h")
 
 richtest_labels <- c(f.test, i.test, p.test, h.test)
 
 
 # Density
-# f.test <- calculateTest(DENSITY.LR, treatment_code = "f") # unequal variances
+# f.test <- runTest(DENSITY.LR, treatment_code = "f") # unequal variances
 f.test <- c(" a*", " a",  " a" )
-# ch.test <- calculateTest(DENSITY.LR, treatment_code = "ch")
-i.test <- calculateTest(DENSITY.LR, treatment_code = "i")
-p.test <- calculateTest(DENSITY.LR, treatment_code = "p")
-h.test <- calculateTest(DENSITY.LR, treatment_code = "h")
+# ch.test <- runTest(DENSITY.LR, treatment_code = "ch")
+i.test <- runTest(DENSITY.LR, treatment_code = "i")
+p.test <- runTest(DENSITY.LR, treatment_code = "p")
+h.test <- runTest(DENSITY.LR, treatment_code = "h")
 
 denstest_labels <- c(f.test, i.test, p.test, h.test)
 

@@ -1,0 +1,352 @@
+,Full name,Old.Life form,Pubescence,Latex,Genus,dsName,Life form,checked.lf
+1,Abrus precatorius (L.) Walp.,climber,NA,NA,0,abrus_precatorius,non-woody,
+2,Acanthaceae Juss.,NA,NA,NA,1,acanthaceae_sp1,non-woody,
+3,Achyranthes aspera L.,herb,NA,NA,0,achyranthes_aspera,non-woody,
+4,Achyranthes L.,NA,NA,NA,1,achyranthes_sp1,non-woody,
+5,Acrostichum Linnaeus,NA,NA,NA,1,acrostochium_sp1,non-woody,
+6,Adenia Forssk.,NA,NA,NA,1,adenia_sp1,non-woody,
+7,Adenostemma lavenia (L.) Kuntze,herb,NA,NA,0,adenostemma_lavenia,non-woody,
+8,Ageratum conyzoides L. 1753 not Hieron. 1895 nor Sieber ex Steud. 1840,herb,2,0,0,ageratum_conyzoides,non-woody,
+9,Aglaia Loureiro,NA,NA,NA,1,aglaia_sp1,woody,
+10,Alocasia (Schott) G. Don,NA,0,0,1,alocasia_sp1,non-woody,
+11,Alphitonia incana (Roxb.) Kurz,woody,NA,0,0,alphitonia_incana,woody,Tree
+12,Alsomitra L.,NA,NA,NA,1,alsomitra_sp1,non-woody,
+13,Alstonia brassii Monach.,woody,NA,NA,0,alstonia_brassii,woody,Tree
+14,Alstonia scholaris (L.) R. Br.,woody,0,1,0,alstonia_scholaris,woody,Tree
+15,Amaranthus lividus L.,herb,NA,NA,0,amaranthus_lividus,non-woody,
+16,Amomum aculeatum Roxb.,herb,NA,NA,0,amomum_aculeatum,non-woody,
+17,Amomum maximum Roxb.,herb,NA,0,0,amomum_maximum,non-woody,
+18,Amomum Roxburgh,NA,NA,NA,1,amomum_sp1,non-woody,
+19,Annonaceae Juss. 1789,NA,NA,NA,1,annonaceae_sp1,non-woody,
+20,Araujia Brot.,NA,NA,NA,1,araujia_sp1,non-woody,
+21,Ardisia O. Swartz,NA,NA,NA,1,ardisia_sp1,non-woody,
+22,Arecaceae Bercht. & J. Presl,NA,0,0,1,arecaceae_sp1,non-woody,
+23,Arthraxon ciliaris P.Beauv.,grass,NA,NA,0,arthraxon_ciliaris,non-woody,
+24,Artocarpus camansi Blanco,woody,NA,NA,0,artocarpus_camansi,woody,Tree
+25,Artocarpus lacucha Buch.-Ham.,woody,NA,NA,0,artocarpus_lacucha,woody,Tree
+26,Arundo L.,NA,NA,NA,1,arundo_sp1,non-woody,
+27,Asplenium L.,NA,NA,NA,1,asplenium_sp1,non-woody,
+28,Asteraceae Dum.,NA,NA,NA,1,asteraceae_sp1,non-woody,
+29,Axonopus compressus (Sw.) P.Beauv.,grass,NA,NA,0,axonopus_compressus,non-woody,
+30,Axonopus fissifolius (Raddi) Kuhlm.,grass,NA,NA,0,axonopus_fissifolius,non-woody,
+31,Barringtonia J.R.Forst. & G.Forst.,NA,NA,NA,1,barringtonia_sp1,woody,
+32,Benincasa hispida (Thunb.) Cogn.,climber,NA,NA,0,benincasa_hispida,non-woody,
+33,Benincasa Savi.,NA,NA,NA,1,benincasa_sp1,non-woody,
+34,Bhesa robusta (Roxb.) Ding Hou,woody,NA,NA,0,bhesa_robusta,woody,Tree
+35,Bidens pilosa L.,herb,NA,NA,0,bidens_pilosa,non-woody,
+36,Blechnum L.,NA,NA,NA,1,blechnum_sp1,non-woody,
+37,Brachiaria mutica (Forssk.) Stapf,grass,NA,NA,0,brachiaria_mutica,non-woody,
+38,Breynia cernua (Poir.) Mull.Arg.,woody,NA,NA,0,breynia_cernua,woody,Shrub tree
+39,Bridelia macrocarpa Airy Shaw,woody,NA,NA,0,bridelia_macrocarpa,woody,Tree
+40,Caesalpinia crista L.,NA,NA,NA,1,caeselpinia_christa,woody,Climber
+41,Calamus aruensis Becc.,sedge,NA,NA,0,calamus_aruensis,non-woody,
+42,Callicarpa pentandra Roxb.,woody,1,0,0,callicarpa_pentandra,woody,Tree
+43,Callipteris Brongniart (Foss.),NA,NA,0,1,callipteris_sp1,non-woody,
+44,Calopogonium mucoides Desv.,climber,NA,NA,0,calopogonium_mucoides,non-woody,
+45,Campnosperma brevipetiolata Volkens,woody,NA,NA,0,campnosperma_brevipetiolata,woody,Tree
+46,Canarium acutifolium (DC.) Merr.,woody,1,1,0,canarium_acutifolium,woody,Tree
+47,Carica papaya L.,woody,NA,NA,0,carica_papaya,woody,semi woody
+48,Caryota L.,NA,NA,NA,1,caryota_sp1,non-woody,
+49,Caryota rumphiana Mart.,sedge,NA,NA,0,caryota_rumphiana,non-woody,
+50,Casuarina L.,NA,NA,NA,1,casuarina_sp1,woody,
+51,Centella asiatica (L.) Urb.,climber,NA,0,0,centella_asiatica,non-woody,
+52,Chisocheton Blume,NA,NA,NA,1,chisocheton_sp1,woody,
+53,Chisocheton ceramicus Miq.,woody,NA,NA,0,chisocheton_ceramicus,woody,Tree
+54,Chromolaena odorata (L.) R.M.King & H.Rob.,herb,1,0,0,chromolaena_odorata,non-woody,climber
+55,Cissus L.,NA,NA,0,1,cissus_sp1,non-woody,
+56,Cissus petiolata Hook. f.,climber,NA,0,0,cissus_petiolata,non-woody,
+57,Cleistanthus myrianthus (Hassk.) Kurz,woody,NA,NA,0,cleistanthus_myrianthus,woody,Tree shrub
+58,Clematis L.,NA,NA,0,1,clematis_sp1,non-woody,
+59,Clerodendrum inerme (L.) Gaertn.,herb,NA,NA,0,clerodendrum_inerme,woody,Tree
+60,Commelina benghalensis L.,herb,NA,0,0,commelina_benghalensis,non-woody,
+61,Commelina L.,NA,NA,0,1,commelina_sp,non-woody,
+62,Commelina paleata Hassk.,woody,NA,0,0,commelina_paleata,non-woody,
+63,Commersonia bartramia (L.) Merr.,woody,NA,NA,0,commersonia_bartramia,woody,Tree
+64,Cordyline terminalis (L.) Kunth,herb,0,0,0,cordyline_terminalis,woody,Tree
+65,Costus speciosus (J. Koenig) Sm.[3],herb,1,0,0,costus_speciosus,non-woody,
+66,Crassocephalum crepidioides (Benth.) S. Moore,herb,NA,0,0,crassocephalum_crepidioides,non-woody,
+67,Cryptocarya canaliculata van der Werff,woody,NA,NA,0,cryptocarya_canaliculata,woody,Tree
+68,Cryptocarya multipaniculata Teschner,woody,0,0,0,cryptocarya_multipaniculata,woody,Tree
+69,Cryptocarya novoguineensis Teschner,woody,NA,NA,0,cryptocarya_novoguineensis,woody,Tree
+70,Cryptocarya R.Br.,NA,NA,NA,1,cryptocarya_sp1,woody,
+71,Cucurbitaceae Juss.,NA,0,0,1,cucurbitaceae_sp,non-woody,
+72,Curculigo recurvata W.T.Aiton,sedge,0,0,0,curculigo_recurvata,non-woody,
+73,Cyanthillium  Blume 1826,NA,NA,NA,1,cyanthillium_sp1,non-woody,
+74,Cyanthillium cinereum (Carl Linnaeus) H.Rob,herb,NA,NA,0,cyanthillium_cinereum,non-woody,
+75,Cyathea contaminans (Wall. ex Hook.) Copel.,sedge,2,1,0,cyathea_contaminans,non-woody,Fern
+76,Cyathea J. E. Smith,NA,NA,0,1,cyathea_sp1,non-woody,
+77,Cyperus bifax C.B.Clarke,sedge,NA,0,0,cyperus_bifax,non-woody,
+78,Cyperus brevifolius (Rottb.) Hassk.,sedge,NA,0,0,cyperus_brevifolius,non-woody,
+79,Cyperus distans Linnaeus f.,sedge,NA,0,0,cyperus_distans,non-woody,
+80,Cyperus involucratus Rottb.,sedge,NA,0,0,cyperus_involucratus,non-woody,
+81,Cyperus L.,NA,NA,0,1,cyperus_sp1,non-woody,
+82,Cyperus rotundus L.,sedge,NA,0,0,cyperus_rotundus,non-woody,
+83,Cypholophus friesianus (K.Schum.) H.J.P.Winkl.,woody,NA,0,0,cypholophus_friesianus,woody,Shrub tree
+84,Cypholophus lutescens (Blume) Wedd.,woody,NA,NA,0,cypholophus_lutescens,woody,Shrub tree
+85,Cypholophus macrocephalus (Blume) Wedd.,woody,NA,0,0,cypholophus_macrocephalus,woody,Shrub tree
+86,Cypholophus Wedd.,NA,NA,0,1,cypholophus_sp,non-woody,
+87,Cyphomandra betacea (Cav.) Sendt.,woody,NA,0,0,cyphomandra_betacea,woody,Tree
+88,Cyrtandra erectiloba G.W.Gillett,woody,NA,0,0,cyrtandra_erectiloba,woody,Shrub
+89,Davallia denticulata (Burm.) Mett.,fern,NA,0,0,davallia_denticulata,non-woody,
+90,Davallia Smith,NA,NA,0,1,davallia_sp1,non-woody,
+91,Debregeasia longifolia (Burm.f.) Wedd.,woody,NA,0,0,debregeasia_longifolia,woody,Tree
+92,Dendrocnide cordata (Warb. ex H.J.P.Winkl.) Chew,woody,NA,0,0,dendrocnide_cordata,woody,Tree
+93,Dendrocnide longifolia (Hemsl.) Chew,woody,NA,NA,0,dendrocnide_longifolia,woody,Tree
+94,Dendrocnide Miq.,NA,NA,NA,1,dendrocnide_sp1,woody,
+95,Desmodium repandum (Vahl) DC.,herb,NA,0,0,desmodium_repandum,non-woody,
+96,Desmodium tenax Schindl.,herb,NA,0,0,desmodium_tenax,non-woody,Shrub climber
+97,Desmodium uncinatum (Jacq.) DC.,herb,NA,0,0,desmodium_uncinatum,non-woody,
+98,Dianthera L.,NA,NA,NA,1,dianthera_sp1,non-woody,
+99,Dichanthium sericeum (R.Br.) A.Camus,grass,NA,0,0,dichanthium_sericeum,non-woody,
+100,Dichapetalum papuanum (Becc.) Boerl.,climber,NA,NA,0,dichapetalum_papuanum,non-woody,climber
+101,Dichrocephala bicolor (Roth) Schltdl.,herb,NA,0,0,dichrocephala_bicolor,non-woody,
+102,Dillenia L.,NA,NA,NA,1,dillenia_sp1,woody,
+103,Dioscorea L.,NA,NA,NA,1,dioscorea_sp1,non-woody,
+104,Diplazium esculentum (Retz.) Sw.,fern,0,0,0,diplazium_esculentum,non-woody,
+105,Diplazium Swartz,NA,NA,0,1,diplazium_sp1,non-woody,
+106,Dracaena angustifolia (Medik.) Roxb.,sedge,NA,NA,0,dracaena_angustifolia,non-woody,
+107,Dracontomelon lenticulatum Wilkinson,woody,NA,NA,0,dracontomelon_lenticulatum,woody,Tree
+108,Drymaria cordata (L.) Willd. ex Schult.,climber,NA,0,0,drymaria_cordata,non-woody,
+109,Dubouzetia novoguineensis A.C.Sm.,woody,NA,0,0,dubouzetia_novoguineensis,woody,Tree
+110,Dubouzetia Pancher ex Brongn. & Gris,NA,NA,NA,1,dubouzetia_sp1,woody,
+111,Dysoxylum archboldianum Merrill & Perry,woody,NA,NA,0,dysoxylum_archboldianum,woody,Tree
+112,Eclipta alatocarpa Melville.,herb,NA,NA,0,eclipta_alatocarpa,non-woody,
+113,Eclipta L.,NA,NA,NA,1,eclipta_sp1,non-woody,
+114,Eclipta prostrata (L.) L.,herb,NA,NA,0,eclipta_prostrata,non-woody,
+115,Elaeocarpus dolichostylus Schltr.,woody,NA,0,0,elaeocarpus_dolichostylus,woody,Tree
+116,Elaeocarpus murukkai Coode,woody,NA,NA,0,elaeocarpus_murukkai,woody,Tree
+117,Elaeocarpus sphaerocarpus H.T.Chang,woody,NA,0,0,elaeocarpus_sphaerocarpus,woody,Tree
+118,Elatostema integrifolium (D.Don) Wedd.,herb,NA,0,0,elatostema_integrifolium,woody,shrub
+119,Elatostema J.R.Forst. & G.Forst.,herb,NA,0,0,elatostema_sp1,woody,
+120,Embelia Burm.f.,NA,NA,NA,1,embelia_sp1,woody,
+121,Embelia cotinoides (S.Moore) Merr.,climber,0,0,0,embelia_cotinoides,non-woody,climber
+122,Emilia sonchifolia (L.) DC. ex Wight,herb,NA,NA,0,emilia_sonchifolia,non-woody,
+123,Endiandra brassii C.K.Allen,woody,NA,NA,0,endiandra_brassii,woody,Tree
+124,Endospermum labios Schodde,woody,0,0,0,endospermum_labios,woody,Tree
+125,Endospermum medullosum L.S.Sm.,herb,NA,NA,0,endospermum_medullosum,non-woody,
+126,Erechtites valerianifolia (Link ex Wolf) Less. ex DC.,herb,NA,NA,0,erechtites_valerianifolia,non-woody,
+127,Erigeron L.,NA,NA,NA,1,erigeron_sp1,non-woody,
+128,Erigeron sumatrensis Retz.,herb,NA,0,0,erigeron_sumatrensis,non-woody,
+129,Etlingera Giseke,NA,0,0,1,etlingera_sp1,non-woody,
+130,Etlingera labellosa (K.Schum.) R.M.Sm.,woody,NA,NA,0,etlingera_labellosa,non-woody,Herbs
+131,Eugenia javanica Lam.,woody,NA,NA,0,eugenia_javanica,woody,Tree
+132,Euphorbia heterophylla L.,herb,NA,NA,0,euphorbia_heterophylla,non-woody,
+133,Euphorbia hirta L.,herb,NA,NA,0,euphorbia_hirta,non-woody,
+134,Eupomatiaceae Orb.,NA,NA,NA,1,eupomatiaceae_sp1,woody,
+135,Fabaceae Lindl.,NA,NA,NA,1,fabaceae_sp1,non-woody,
+136,Falcataria moluccana (Miq.) Barneby & J.W.Grimes,woody,0,0,0,falcataria_moluccana,woody,Tree
+137,Ficus adelpha K.Schum. & Lauterb.,woody,NA,NA,0,ficus_adelpha,woody,Tree
+138,Ficus adenosperma Miq.,woody,NA,1,0,ficus_adenosperma,woody,Tree
+139,Ficus arfakensis King,woody,1,1,0,ficus_arfakensis,woody,Tree
+140,Ficus aurantiacifolia Weiblen & Whitfeld,woody,NA,NA,0,ficus_aurantiacifolia,woody,Tree
+141,Ficus badiopurpurea Diels,woody,NA,NA,0,ficus_badiopurpurea,woody,Tree
+142,Ficus botryocarpa Miq.,woody,NA,NA,0,ficus_botryocarpa,woody,Tree
+143,Ficus calopilina Diels,woody,NA,1,0,ficus_calopilina,woody,Tree
+144,Ficus congesta Roxb.,woody,NA,1,0,ficus_congesta,woody,Tree
+145,Ficus conocephalifolia Ridl.,woody,NA,NA,0,ficus_conocephalifolia,woody,Tree
+146,Ficus copiosa Steud.,woody,1,1,0,ficus_copiosa,woody,Tree
+147,Ficus dammaropsis Diels,woody,NA,1,0,ficus_dammaropsis,woody,Tree
+148,Ficus edelfeltii King,woody,NA,NA,0,ficus_edelfeltii,woody,Tree
+149,Ficus endospermifolia Corner,woody,NA,NA,0,ficus_endospermifolia,woody,Tree
+150,Ficus erythrosperma Miq.,woody,NA,NA,0,ficus_erythrosperma,woody,Tree
+151,Ficus hahliana Diels,woody,2,1,0,ficus_hahliana,woody,Tree
+152,Ficus hispidioides S.Moore,woody,NA,NA,0,ficus_hispidioides,woody,Tree
+153,Ficus hombroniana Corner,woody,NA,NA,0,ficus_hombroniana,woody,Tree
+154,Ficus jimiensis C.C.Berg,woody,NA,NA,0,ficus_jimiensis,non-woody,Climber
+155,Ficus L.,NA,0,1,1,ficus_sp1,woody,
+156,Ficus melinocarpa Blume,woody,NA,NA,0,ficus_melinocarpa,woody,Tree
+157,Ficus mollior F.Muell. ex Benth.,woody,NA,NA,0,ficus_mollior,woody,Tree
+158,Ficus morobensis C.C.Berg,woody,1,1,0,ficus_morobensis,woody,Tree
+159,Ficus nodosa Teijsm. & Binn.,woody,0,1,0,ficus_nodosa,woody,Tree
+160,Ficus pachyrrhachis K.Schum. & Lauterb.,woody,NA,NA,0,ficus_pachyrrhachis,woody,Tree
+161,Ficus pungens Reinw. ex Blume,woody,2,1,0,ficus_pungens,woody,Tree
+162,Ficus rubrivestimenta Weiblen & Whitfeld,woody,NA,NA,0,ficus_rubrivestimenta,woody,Tree
+163,Ficus sangumae Weiblen & Whitfeld,woody,0,1,0,ficus_sangumae,woody,Shrub
+164,Ficus semivestita Corner,woody,NA,NA,0,ficus_semivestita,woody,Tree
+165,Ficus septica Burm.f.,woody,1,1,0,ficus_septica,woody,Tree
+166,Ficus subulata Blume,woody,NA,NA,0,ficus_subulata,non-woody,Climber
+167,Ficus trachypison K.Schum. & Lauterb.,woody,NA,NA,0,ficus_trachypison,woody,Tree
+168,Ficus trichocerasa Diels,woody,2,1,0,ficus_trichocerasa,woody,Tree
+169,Ficus variegata Blume,woody,0,1,0,ficus_variegata,woody,Tree
+170,Ficus wassa Roxb.,woody,NA,1,0,ficus_wassa,woody,Tree
+171,Ficus xylophylla (Miq.) Wall. ex Miq.,woody,0,1,0,ficus_xylophylla,woody,Tree
+172,Fimbristylis dichotoma (L.) Vahl,herb,NA,0,0,fimbristylis_dichotoma,non-woody,
+173,Flagellaria indica L.,climber,NA,NA,0,flagellaria_indica,non-woody,
+174,Garuga floribunda Decne.,woody,NA,NA,0,garuga_floribunda,woody,Tree
+175,Gastonia spectabilis (Harms) Philipson,woody,1,0,0,gastonia_spectabilis,woody,Tree
+176,Geunsia Blume,NA,0,0,1,geunsia_sp1,non-woody,
+177,Glochidion angulatum C.B.Rob.,woody,0,0,0,glochidion_angulatum,woody,Tree
+178,Glochidion J.R.Forst. & G.Forst.,NA,0,0,1,glochidion_sp1,woody,
+179,Gnetum gnemon L.,woody,NA,NA,0,gnetum_gnemon,woody,Tree
+180,Gnetum latifolium Blume,woody,NA,NA,0,gnetum_latifolium,non-woody,Climber
+181,Grewia glabra Blume,woody,NA,NA,0,grewia_glabra,woody,Tree
+182,Guioa comesperma Radlk.,woody,NA,NA,0,guioa_comesperma,woody,Tree
+183,Gunnera macrophylla Blume.,herb,NA,0,0,gunnera_macrophylla,non-woody,
+184,Halesia J.Ellis ex L.,NA,NA,NA,1,halesia_sp1,woody,
+185,Haplolobus lanceolatus H.J.Lam,woody,NA,NA,0,haplolobus_lanceolatus,woody,Tree
+186,Hardenbergia Benth.,NA,NA,NA,1,hardenbergia_sp1,non-woody,
+187,Harpullia longipetala Leenh.,woody,NA,NA,0,harpullia_longipetala,woody,Tree
+188,Hernandia ovigera L.,woody,NA,NA,0,hernandia_ovigera,woody,Tree
+189,Hibiscus papuodendron Kosterm.,woody,NA,NA,0,hibiscus_papuodendron,woody,Tree
+190,Homalanthus nervosus J.J.Sm.,woody,NA,1,0,homalanthus_nervosus,woody,Tree
+191,Homalanthus novoguineensis (Warb.) K.Schum.,woody,0,1,0,homalanthus_novoguineensis,woody,Tree
+192,Hornstedtia A. J. Retzius,NA,0,0,1,hornstedtia_sp1,non-woody,
+193,Hornstedtia lycostoma (Lauterb. & K.Schum.) K.Schum.,herb,0,0,0,hornstedtia_lycostoma,non-woody,
+194,Horsfieldia spicata (Roxb.) J.Sinclair,woody,NA,NA,0,horsfieldia_spicata,woody,Tree
+195,Hyptis capitata Jacq.,herb,NA,NA,0,hyptis_capitata,non-woody,
+196,Ichnanthus vicinus (F.M.Bailey) Merr.,herb,NA,NA,0,ichnanthus_vicinus,non-woody,
+197,Impatiens L.,NA,NA,NA,1,impatiens_sp1,non-woody,
+198,Imperata cylindrica (L.) P.Beauv.,grass,1,0,0,imperata_cylindrica,non-woody,
+199,Ipomoea batatas (L.) Lam.,climber,NA,NA,0,ipomoea_batatas,non-woody,
+200,Ipomoea L.,NA,NA,NA,1,ipomoea_sp1,non-woody,
+201,Ipomoea triloba L.,herb,NA,NA,0,ipomoea_triloba,non-woody,
+202,Ischaemum polystachyum J.Presl,grass,NA,NA,0,ischaemum_polystachyum,non-woody,
+203,Lamiaceae Lindl.,NA,NA,NA,1,lamiaceae_sp1,non-woody,
+204,Laportea interrupta (L.) Chew,woody,NA,0,0,laportea_interrupta,non-woody,
+205,Leea indica (Burm.f.) Merr.,woody,NA,NA,0,leea_indica,woody,Tree
+206,Lepistemon Blume,NA,NA,NA,1,lepistemon_sp1,non-woody,
+207,Lepistemon urceolatus (R.Br.) F.Muell.,climber,NA,NA,0,lepistemon_urceolatus,non-woody,
+208,Leucosyce Zoll. & Mor.,NA,NA,NA,1,leucosyce_sp1,non-woody,
+209,Lithocarpus celebicus (Miq.) Rehder,woody,NA,NA,0,lithocarpus_celebicus,woody,Tree
+210,Litsea collina S. Moore,woody,NA,NA,0,litsea_collina,woody,Tree
+211,Litsea globosa Kosterm.,woody,NA,NA,0,litsea_globosa,woody,Tree
+212,Litsea Lam.,NA,NA,NA,1,litsea_sp1,woody,
+213,Luffa P. Miller,NA,NA,0,1,luffa_sp1,non-woody,
+214,Lygodium O. Swartz,NA,NA,NA,1,lygodium_sp1,non-woody,
+215,Macaranga aleuritoides F.Muell.,woody,0,1,0,macaranga_aleuritoides,woody,Tree
+216,Macaranga bicolor Muell.-Arg.,woody,NA,NA,0,macaranga_bicolor,woody,Tree
+217,Macaranga bifoveata J.J.Sm.,woody,0,1,0,macaranga_bifoveata,woody,Tree
+218,Macaranga fallacina Pax & K.Hoffm.,woody,0,1,0,macaranga_fallacina,woody,Tree
+219,Macaranga pleiostemon Pax & K.Hoffm.,woody,NA,0,0,macaranga_pleiostemon,woody,Tree
+220,Macaranga punctata K.Schum.,woody,NA,NA,0,macaranga_punctata,woody,Tree
+221,Macaranga quadriglandulosa Warb.,woody,NA,NA,0,macaranga_quadriglandulosa,woody,Tree
+222,Macaranga schleinitziana K.Schum.,woody,NA,NA,0,macaranga_schleinitziana,non-woody,Climber
+223,Macaranga strigosa Pax & K.Hoffm.,woody,NA,0,0,macaranga_strigosa,woody,Tree
+224,Macaranga tanarius (L.) Müll.Arg.,woody,0,1,0,macaranga_tanarius,woody,Tree
+225,Macaranga Thouars 1806,NA,NA,0,1,macaranga_sp1,woody,
+226,Maclura amboinensis Blume,woody,NA,NA,0,maclura_amboinensis,non-woody,Climber
+227,Maclura pomifera Raf. Schneid.,NA,NA,NA,1,maclura_sp1,woody,
+228,Maesa haplobotrys F.Muell.,climber,1,0,0,maesa_haplobotrys,woody,Tree
+229,Magnolia champaca (L.) Baill. ex Pierre,woody,0,0,0,magnolia_champaca,woody,Tree
+230,Mallotus mollissimus (Geiseler) Airy Shaw,woody,NA,NA,0,mallotus_mollissimus,woody,Tree
+231,Manihot esculenta Crantz.,woody,NA,NA,0,manihot_esculenta,non-woody,
+232,Manihot Mill. 1754,NA,NA,NA,1,manihot_sp1,non-woody,
+233,Mapania Aublet,NA,NA,0,1,mapania_sp1,non-woody,
+234,Marattia tafaensis C.Chr.,fern,NA,NA,0,marattia_tafaensis,non-woody,
+235,Marsdenia velutina R.Br.,climber,NA,NA,0,marsdenia_velutina,non-woody,
+236,Melanolepis multiglandulosa (Reinw. ex Blume) Rchb. & Zoll.,woody,NA,NA,0,melanolepis_multiglandulosa,woody,Tree
+237,Melastoma Blume,NA,NA,NA,1,melastoma_sp1,woody,
+238,Melastoma polyanthum Burm. f.,woody,NA,NA,0,melastoma_polyanthum,woody,Tree
+239,Melicope denhamii (Seem.) T.G.Hartley,woody,NA,NA,0,melicope_denhamii,woody,Tree
+240,Meliosma pinnata (Roxb.) Maxim.,woody,NA,NA,0,meliosma_pinnata,woody,Tree
+241,Melochia L. (1753),NA,NA,NA,1,melochia_sp1,woody,
+242,Merremia peltata (L.) Merr.,climber,0,1,0,merremia_peltata,non-woody,
+243,Merrilliodendron megacarpum (Hemsl.) Sleumer,woody,NA,NA,0,merrilliodendron_megacarpum,woody,Tree
+244,Mikania micrantha Kunth,climber,NA,0,0,mikania_micrantha,non-woody,
+245,Mischocarpus sundaicus Blume,woody,NA,NA,0,mischocarpus_sundaicus,woody,Tree
+246,Momordica Linnaeus,NA,NA,0,1,momordica_sp1,non-woody,
+247,Musa L.,NA,0,1,1,musa_sp1,non-woody,
+248,Musa peekelii Lauterb.,herb,0,1,0,musa_peekelii,non-woody,
+249,Mussaenda cylindrocarpa Burck,woody,NA,NA,0,mussaenda_cylindrocarpa,woody,Tree
+250,Nasturtium W.T. Aiton,NA,NA,NA,1,nasturtium_sp1,non-woody,
+251,Neonauclea obversifolia (Valeton) Merr. & L.M.Perry,woody,NA,0,0,neonauclea_obversifolia,woody,Tree
+252,Neoscortechinia forbesii (Hook.f.) S.Moore,woody,NA,NA,0,neoscortechinia_forbesii,woody,Tree
+253,Nephrolepis Schott,NA,NA,0,1,nephrolepis_sp1,non-woody,
+254,Nothocnide Blume,NA,NA,NA,1,nothocnide_sp1,woody,
+255,Nothocnide repanda (Blume) Blume,woody,NA,0,0,nothocnide_repanda,non-woody,Climber
+256,Oplismenus compositus (L.) P. Beauv.,grass,NA,0,0,oplismenus_compositus,non-woody,
+257,Oplismenus hirtellus (L.) P.Beauv.,grass,NA,0,0,oplismenus_hirtellus,non-woody,
+258,Oplismenus P.Beauv.,NA,NA,0,1,oplismenus_sp1,non-woody,
+259,Orchidaceae Juss.,NA,0,0,1,orchidaceae_sp1,non-woody,
+260,Oreocnide rubescens (Blume) Miq.,woody,0,0,0,oreocnide_rubescens,woody,Tree
+261,Oreocnide trinervis (Wedd.) Miq.,woody,0,0,0,oreocnide_trinervis,woody,Tree
+262,Oxera splendida (F.Muell.)Gâteblé & Barrabé,climber,NA,NA,0,oxera_splendida,non-woody,
+263,Pandanus S. Parkinson,NA,NA,NA,1,pandanus_sp1,woody,
+264,Pandorea pandorana (Andrews) Steenis,woody,NA,NA,0,pandorea_pandorana,woody,Tree
+265,Parsonsia R.Br.,NA,0,0/1,1,parsonsia_sp1,woody,
+266,Paspalum conjugatum P.J.Bergius,grass,1,0,0,paspalum_conjugatum,non-woody,
+267,Paspalum L.,NA,NA,0,1,paspalum_sp1,non-woody,
+268,Paspalum paniculatum L.,grass,NA,0,0,paspalum_paniculatum,non-woody,
+269,Passiflora foetida L.,climber,NA,NA,0,passiflora_foetida,non-woody,
+270,Passiflora L.,NA,1,0,1,passiflora_sp1,non-woody,
+271,Passiflora racemosa Brot.,climber,NA,0,0,passiflora_racemosa,non-woody,
+272,Pavetta platyclada K.Schum. & Lauterb.,woody,NA,NA,0,pavetta_platyclada,woody,Tree
+273,Persicaria nepalensis (Meisn.) H.Gross,herb,NA,NA,0,persicaria_nepalensis,non-woody,
+274,Phrynium macrocephalum K.Schum,herb,NA,NA,0,phrynium_macrocephalum,non-woody,
+275,Phrynium Willd.,NA,NA,NA,1,phrynium_sp1,non-woody,
+276,Phylacium bracteosum Benn.,climber,NA,NA,0,phylacium_bracteosum,non-woody,
+277,Phyllanthus L.,NA,NA,NA,1,phyllanthus_sp1,non-woody,
+278,Physalis angulata L.,herb,NA,NA,0,physalis_angulata,non-woody,
+279,Physalis L.,NA,NA,0,1,physalis_sp1,non-woody,
+280,Piper aduncum L.,woody,1,0,0,piper_aduncum,woody,Tree
+281,Piper betle L.,climber,NA,NA,0,piper_betle,non-woody,
+282,Piper L.,NA,NA,NA,1,piper_sp1,non-woody,
+283,Piper melula Trel.,woody,NA,0,0,piper_melula,woody,Tree
+284,Piper recessum R.O.Gardner,woody,NA,0,0,piper_recessum,woody,Tree
+285,Piper subulatum C. DC.,woody,NA,0,0,piper_subulatum,woody,Tree
+286,Piper umbellatum L.,woody,NA,NA,0,piper_umbellatum,woody,Shrub
+287,Pipturus argenteus Wedd.,woody,0,0,0,pipturus_argenteus,woody,Tree
+288,Pisonia longifolia (Heimerl) Sarg.,woody,NA,NA,0,pisonia_longifolia,woody,Tree
+289,Pittosporum Banks ex J. Gaertner,NA,NA,0,1,pittosporum_sp1,non-woody,
+290,Pleuranthodium (K.Schum.) R.M.Sm.,NA,NA,0,1,pleuranthodium_sp1,non-woody,
+291,Pleuranthodium neragaimae (Gilli) R.M.Sm.,herb,NA,NA,0,pleuranthodium_neragaimae,non-woody,
+292,Podocarpus neriifolius D. Don,woody,NA,NA,0,podocarpus_neriifolius,woody,Tree
+293,Pogonatherum paniceum (Lam.) Hack.,grass,NA,NA,0,pogonatheum_paniceum,non-woody,
+294,Polygala paniculata L.,herb,NA,NA,0,polygala_paniculata,non-woody,
+295,Polygonum strigosum r. Br.,herb,NA,NA,0,polygonum_strigosum,non-woody,
+296,"Polypodiopsida Cronquist, Takht. & W.Zimm.",NA,NA,NA,1,fern_sp1,non-woody,
+297,Pometia pinnata J.R.Forst. & G.Forst.,woody,NA,NA,0,pometia_pinnata,woody,Tree
+298,Pouzolzia hirta (Blume) Hassk.,woody,NA,NA,0,pouzolzia_hirta,non-woody,
+299,Premna L.,NA,NA,NA,1,premna_sp1,woody,
+300,Premna obtusifolia R.Br.,woody,NA,NA,0,premna_obtusifolia,woody,Tree
+301,Psidium guajava L.,woody,NA,NA,0,psidium_guajava,woody,Tree
+302,Psychotria leptothyrsa Miq.,woody,NA,NA,0,psychotria_leptothyrsa,woody,Tree
+303,Pteris L.,NA,NA,0,1,pteris_sp1,non-woody,
+304,Pueraria triloba (Aiton) Makino,climber,NA,NA,0,pueraria_triloba,non-woody,
+305,Rhaphidophora peekelii Engl. & K.Krause,climber,NA,NA,0,rhaphidophora_peekelii,non-woody,
+306,Rhus taitensis Guill.,woody,NA,NA,0,rhus_taitensis,woody,Tree
+307,Riedelia microbotrya Valeton,herb,NA,NA,0,riedelia_microbotrya,non-woody,
+308,Rubus L.,NA,NA,0,1,rubus_sp1,non-woody,
+309,Rubus moluccanus L.[,climber,NA,0,0,rubus_moluccanus,non-woody,Climber
+310,Ryparosa javanica (Blume) Kurz ex Koord. & Valeton,woody,NA,NA,0,ryparosa_javanica,woody,Tree
+311,Sabiaceae Blume,NA,NA,NA,1,sabiaceae_sp1,woody,
+312,Salacia chinensis L.,woody,NA,NA,0,salacia_chinensis,non-woody,Climber
+313,Saurauia conferta Warb.,woody,NA,0,0,saurauia_conferta,woody,Tree
+314,Saurauia fimbriata A.C.Sm.,woody,NA,NA,0,saurauia_fimbriata,woody,Tree
+315,Saurauia poolei C.T.White & W.D.Francis,woody,NA,0,0,saurauia_poolei,woody,Tree
+316,Saurauia Willd.,NA,NA,0,1,saurauia_sp1,woody,
+317,Schefflera J.R. Forst. & G. Forst.,NA,NA,NA,1,scheflfera_sp1,non-woody,
+318,Selaginella P. Beauv.,NA,NA,0,1,selaginella_sp1,non-woody,
+319,Selaginella velutina Cesati,fern,NA,NA,0,selaginella_velutina,non-woody,
+320,Setaria parviflora (Poir.) Kerguélen,grass,NA,0,0,setaria_parviflora,non-woody,
+321,Sida rhombifolia L.,herb,NA,NA,0,sida_rhombifolia,non-woody,
+322,Smilax australis R.Br.,climber,NA,0,0,smilax_australis,non-woody,
+323,Solanaceae Juss.,NA,NA,NA,1,solanaceae_sp1,non-woody,
+324,Solanum L.,NA,NA,0,1,solanum_sp1,non-woody,
+325,Solanum torvum Sw.,woody,1,0,0,solanum_torvum,woody,Shrub
+326,Sorghum Moench,NA,NA,0,1,sorghum_sp1,non-woody,
+327,Sorghum propinquum (Kunth) Hitchc.,grass,NA,NA,0,sorghum_propinquum,non-woody,
+328,"Sphaerostephanos J.Sm., Gen. Fil. (Hooker)",NA,0,0,1,sphaerostephanos_sp1,non-woody,
+329,Sphaerostephanos unitus (L.) Holttum,fern,NA,0,0,sphaerostephanos_unitus,non-woody,
+330,Stachytarpheta urticifolia Sims,herb,NA,NA,0,stachytarpheta_urticifolia,non-woody,
+331,Steganthera Perkins,NA,NA,NA,1,steganthera_sp1,woody,
+332,Stemona papuana Schltr.,climber,NA,NA,0,stemona_papuana,non-woody,
+333,Stylosanthes humilis Kunth,herb,NA,NA,0,stylosanthes_humilis,non-woody,
+334,Synedrella nodiflora (L.) Gaertn.,herb,NA,NA,0,synedrella_nodiflora,non-woody,
+335,Syzygium branderhorstii Lauterb.,woody,NA,0,0,syzygium_branderhorstii,woody,Tree
+336,Syzygium gonatanthum (Diels) Merr. & L.M.Perry,woody,NA,NA,0,syzygium_gonatanthum,woody,Tree
+337,Tabernaemontana pandacaqui Lam.,herb,0,1,0,tabernaemontana_pandacaqui,non-woody,
+338,Tetrastigma voinierianum (Baltet) Gagnep.,climber,0,0,0,tetrastigma_voinierianum,non-woody,
+339,Timonius densiflorus Valeton,woody,NA,0,0,timonius_densiflorus,woody,Tree
+340,Tinospora cordifolia (Willd.) Hook. f. & Thomson,climber,NA,0,0,tinospora_cordifolia,non-woody,
+341,Tournefortia L.,NA,NA,0,1,tournefortia_sp1,woody,
+342,Tournefortia sarmentosa Lam.,woody,NA,NA,0,tournefortia_sarmentosa,non-woody,Climber
+343,Trema orientale (L.) Blume,woody,NA,0,0,trema_orientale,woody,Tree
+344,Trichospermum pleiostigma (F.Muell.) Kosterm.,woody,1,1,0,trichospermum_pleiostigma,woody,Tree
+345,Turpinia pentandra (Schltr.) B.L.Linden,woody,NA,0,0,turpinia_pentandra,woody,Tree
+346,Uncaria lanosa Wall.,climber,0,0,0,uncaria_lanosa,non-woody,
+347,Uncaria Schreber,NA,NA,NA,1,uncaria_sp1,non-woody,
+348,Urena lobata L.,herb,NA,NA,0,urena_lobata,non-woody,
+349,Urticaceae Juss.,NA,NA,NA,1,urticaceae_sp1,non-woody,
+350,Vitex cofassus Reinw. ex Blume,woody,NA,NA,0,vitex_cofassus,woody,Tree
+351,Zanthoxylum pluviatile T.G.Hartley,woody,NA,0,0,zanthoxylum_pluviatile,woody,Tree
