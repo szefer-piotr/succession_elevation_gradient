@@ -3,7 +3,7 @@
 # This may be used to produce labels for the log-ratio comparison figure.
 
 # rm(list = ls())
-# source("code/log_ratio_extraction.R")
+source("code/log_ratio_extraction.R")
 
 library(ggplot2)
 library(emmeans)
@@ -15,44 +15,19 @@ library(multcompView)
 
 # Statistical test
 
-# 1) Compare relative strengths of individual factors at each site
+# lrdata <- BIOMASS.LR
+# treatment_code <- "f"
+# 
 
-# 1.1) On raw biomass data glmm with garden as a random factor (in different script!)
-
-# 2) strength changing with elevation
-lrdata <- BIOMASS.LR
-treatment_code <- "f"
-
-
-
-# runTest <- function(lrdata, treatment_code = "f"){
-#   # Specific wrapper around testing procedure
-#   
-#   # Filter data
-#   trtdata  <- lrdata %>%
-#     filter(treatment == treatment_code)
-#   
-#   # Calculate model
-#   # No intercept model
-#   trtlmw <- lm(lratio ~ 1, data = trtdata %>% filter(site == "wanang"))
-#   trtlmn <- lm(lratio ~ 1, data = trtdata %>% filter(site == "numba"))
-#   trtlmy <- lm(lratio ~ 1, data = trtdata %>% filter(site == "yawan"))
-#   
-#   # Tukey post-hoc
-#   # emm <- emmeans(trtlm, "site", correction = "tukey")
-#   
-#   return(c())
-#   
-# }
 
 # 2.1) Tests for individual treatments
 
 # Biomasss
-f.test <- runTest(BIOMASS.LR, treatment_code = "f")
+f.test <- runTest(BIOMASS.LR, treatment_code = "f", "biomass")
 # ch.test <- runTest(BIOMASS.LR, treatment_code = "ch")
-i.test <- runTest(BIOMASS.LR, treatment_code = "i")
-p.test <- runTest(BIOMASS.LR, treatment_code = "p")
-h.test <- runTest(BIOMASS.LR, treatment_code = "h")
+i.test <- runTest(BIOMASS.LR, treatment_code = "i","biomass")
+p.test <- runTest(BIOMASS.LR, treatment_code = "p","biomass")
+h.test <- runTest(BIOMASS.LR, treatment_code = "h","biomass")
 
 
 

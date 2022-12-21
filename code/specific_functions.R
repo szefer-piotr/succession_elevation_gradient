@@ -88,7 +88,7 @@ getLogRatio <- function (dataset,
   
 }
 
-runTest <- function(lrdata, treatment_code = "f"){
+runTest <- function(lrdata, treatment_code = "f", label){
   # Specific wrapper around testing procedure
   
   # Filter data
@@ -97,19 +97,23 @@ runTest <- function(lrdata, treatment_code = "f"){
   
   ltest.p <- leveneTest(lratio ~ site, data =  trtdata)
   btest.p <- bartlett.test(lratio ~ site, data =  trtdata)
-  print(ltest.p)
-  print(btest.p)
   
   # If the varianvces are unequal then perform GLS
   if(ltest.p$`Pr(>F)`[1] < 0.05){
-    
+    variance <- 'non-homogenous'
     trtlm <- gls(lratio ~ 0 + site, data = trtdata,
                  weights = varIdent(form = ~1|site))
     summary(trtlm)
     
+    aovtrt <- anova(trtlm)
+    testStat <- aovtrt$`F-value`
+    testP <- aovtrt$`p-value`
+    
     print("Model runned")
     
     # Tukey post-hoc
+    
+    print("Stage1")
     emm <- emmeans::emmeans(object = trtlm, 
                             specs = "site", 
                             adjust = "wald")
@@ -125,7 +129,12 @@ runTest <- function(lrdata, treatment_code = "f"){
     paste(mod_means,zero.dif, sep = "") -> res
     
   }else{
+    variance <- 'homogenous'
     trtlm <- lm(lratio ~ 0 + site, data = trtdata)
+    
+    aovtrt <- anova(trtlm)
+    testStat <- aovtrt$`F value`
+    testP <- aovtrt$`Pr(>F)`
     
     # Tukey post-hoc
     emm <- emmeans(object = trtlm, 
@@ -139,11 +148,20 @@ runTest <- function(lrdata, treatment_code = "f"){
     paste(mod_means,zero.dif, sep = "") -> res
   }
   
+  
+  
+  test.df <- data.frame(testType = c("Levene Test", "Bartlett Test", paste(variance, 'anova')),
+                        statName = c("F-value", "Bartlett's K-squared", "F-value"),
+                        testStat = c(ltest.p$`F value`[1], as.numeric(btest.p$statistic),testStat[1]),
+                        pVal = c(ltest.p$`Pr(>F)`[1], btest.p$p.value[1], testP[1]),
+                        treatmentCode = treatment_code,
+                        caselabel = label)
+  
   # If all letter are the same then return empty vector
   if(length(unique(res)) == 1){
     res <- vector("character", length = 3)
   } 
   
-  return(res)
+  return(list(res, test.df))
   
 }
