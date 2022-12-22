@@ -88,6 +88,8 @@ getLogRatio <- function (dataset,
   
 }
 
+# lrdata <- DENSITY.LR
+# treatment_code = "p"
 runTest <- function(lrdata, treatment_code = "f", label){
   # Specific wrapper around testing procedure
   
@@ -101,9 +103,8 @@ runTest <- function(lrdata, treatment_code = "f", label){
   # If the varianvces are unequal then perform GLS
   if(ltest.p$`Pr(>F)`[1] < 0.05){
     variance <- 'non-homogenous'
-    trtlm <- gls(lratio ~ 0 + site, data = trtdata,
+    trtlm <- nlme::gls(lratio ~ 0 + site, data = trtdata,
                  weights = varIdent(form = ~1|site))
-    summary(trtlm)
     
     aovtrt <- anova(trtlm)
     testStat <- aovtrt$`F-value`
@@ -114,19 +115,19 @@ runTest <- function(lrdata, treatment_code = "f", label){
     # Tukey post-hoc
     
     print("Stage1")
-    emm <- emmeans::emmeans(object = trtlm, 
-                            specs = "site", 
-                            adjust = "wald")
+    # emm <- emmeans(object = trtlm, 
+    #                         specs = "site",
+    #                adjust = "mvt")
     
-    print("Post hoc runned")
+    print("Post hoc not runned")
     
     zero.dif <- ifelse(summary(trtlm)$tTable[,4] > 0.05, "","*")
     print("zero.dif assigned")
     
-    mod_means <- multcomp::cld(object = emm,
-                               Letters = letters)$.group
+    # mod_means <- multcomp::cld(object = emm,
+    #                            Letters = letters)$.group
     
-    paste(mod_means,zero.dif, sep = "") -> res
+    paste("a",zero.dif, sep = "") -> res
     
   }else{
     variance <- 'homogenous'
@@ -165,3 +166,4 @@ runTest <- function(lrdata, treatment_code = "f", label){
   return(list(res, test.df))
   
 }
+
