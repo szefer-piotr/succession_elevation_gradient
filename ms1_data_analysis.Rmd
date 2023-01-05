@@ -11,23 +11,128 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-## General effects of biotic factors
+## Experimental design
+
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+# The source file loads the data preparation script, where the raw data is read and summarised for further analyses
 source('code/log_ratio_extraction.R')
 
-# Overdispersion test for the density in the fungicide treatment
+# Over-dispersion test for the density in the fungicide treatment
 lrdata <- DENSITY.LR
 lvT <- leveneTest(lratio ~ site, data = lrdata %>% filter(treatment == "f"))
 lvtpval <- lvT$`Pr(>F)`[1]
+```
 
-sjPlot::tab_df(lrr_test_df)
+We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites on elevations spanning `r 1900 - 200` m from 200 to 1900 m a.s.l.
+
+Figure 1. Meadian, 1st, second quartiles, 1.5 IRQ distanceT and outliers in biomass, richness diversity and density at each location/elevation, but some Yawan sites were extremely productive.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+
+library(ggplot2)
+library(dplyr)
+
+elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, simpson), 
+                   DENSITY %>% dplyr::select(site, garden, treatment, tot.stem.no))
+
+findoutlier <- function(x) {
+  return(x < quantile(x, .25) - 1.5*IQR(x) | x > quantile(x, .75) + 1.5*IQR(x))
+}
+
+elevdata <- elev.bind %>% 
+  mutate(value = ifelse(!is.na(tot_bio), tot_bio, 
+                        ifelse(!is.na(sp_no), sp_no, 
+                               ifelse(!is.na(simpson), simpson, tot.stem.no)))) %>%
+  mutate(descriptor = ifelse(!is.na(tot_bio), "Total biomass [kg]", 
+                        ifelse(!is.na(sp_no), "Number of species", 
+                               ifelse(!is.na(simpson), "Simpson's diversity", "Abundance")))) %>%
+  dplyr::select(site, garden, treatment, value, descriptor) %>%
+  mutate(fsite = factor(site, levels = c("wanang", "numba","yawan"))) %>%
+  arrange(descriptor, fsite, treatment, garden)
+
+elevdataT <- elevdata %>% 
+  mutate(valueTrans = ifelse(descriptor == "Simpson's diversity", 
+                             value, log(value)))
+
+outliers <- c()
+for (desc in unique(elevdataT$descriptor)) {
+  for (st in unique(elevdataT$site)) {
+    for (trt in unique(elevdataT$treatment)) {
+      
+      print(paste(desc,st,trt))
+      
+      outliers <- c(outliers,findoutlier(pull(elevdataT %>% filter(descriptor == desc,
+                          site == st,
+                          treatment == trt), valueTrans)))
+
+    }
+
+  }
+}
+elevdataT$outlierBool <- outliers 
+elevdataT <- elevdataT %>% mutate(outlier = ifelse(outlierBool, garden, ""))
+
+
+
+ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
+  geom_boxplot()+
+  geom_text(aes(label=outlier), hjust = 1.2, vjust = -0.0005, na.rm=TRUE)+
+  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
+  theme_bw()
 
 ```
 
-Description...
+Looking at the control plots Numba (the mid-elevation in our study) has the highest abundance and number of species. Predictably productivity decreases with elevation. Control plots in Numba are more variable than in other two elevations. Yawan has one site with lowest abundance (garden number seven).However no significant differences in variance were detected (Levene's and Bartellet's tests)
 
-```{r}
+## General effects of biotic factors
+
+We calculated log-response ratios for plant biomass, species richness, species diversity and stem density to be able to compare the effect sizes at individual elevations.
+
+Table 1. Test results for over-dispersion all descriptors at three studied elevations.
+
+```{r, echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
+sjPlot::tab_df(lrr_test_df)
+```
+
+There is generally little evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. However, results of a GLS model accounting for over-dispersion (using 'varIdent(form = ~1|site)' as weights in the GLS function) were very similar to those obtained from a simple LM model.
+
+```{r,  echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
+# Results of a GLS model with over-dispersion vs LM model for density LRR in the predator exclusion treatment.
+
+trtdata <-  trtdata  <- lrdata %>%
+    filter(treatment == 'p')
+
+trtlm <- nlme::gls(lratio ~ 0 + site, data = trtdata,
+                 weights = varIdent(form = ~1|site))
+    
+    aovtrt <- anova(trtlm)
+    testStat <- aovtrt$`F-value`
+    testP <- aovtrt$`p-value`
+    
+    print("Model runned")
+    
+    # Tukey post-hoc
+    print("Stage1")
+    emm <- emmeans(object = trtlm,
+                            specs = "site",
+                   adjust = "mvt")
+    
+    print("Post hoc not runned")
+    
+    zero.dif <- ifelse(summary(trtlm)$tTable[,4] > 0.05, "","*")
+    print("zero.dif assigned")
+    
+    # mod_means <- multcomp::cld(object = emm,
+    #                            Letters = letters)$.group
+    
+    paste("a",zero.dif, sep = "") -> res
+
+```
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 library(ggplot2)
 # library(GGally)
 # library(lme4)
