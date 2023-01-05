@@ -19,14 +19,14 @@ knitr::opts_chunk$set(echo = FALSE)
 source('code/log_ratio_extraction.R')
 
 # Over-dispersion test for the density in the fungicide treatment
-lrdata <- DENSITY.LR
-lvT <- leveneTest(lratio ~ site, data = lrdata %>% filter(treatment == "f"))
-lvtpval <- lvT$`Pr(>F)`[1]
+# lrdata <- DENSITY.LR
+# lvT <- leveneTest(lratio ~ site, data = lrdata %>% filter(treatment == "f"))
+# lvtpval <- lvT$`Pr(>F)`[1]
 ```
 
-We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites on elevations spanning `r 1900 - 200` m from 200 to 1900 m a.s.l.
+We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites on elevations spanning `r 1900 - 200` m from 200 to 1900 m a.s.l. Low elevation is Wanang (200 m a.s.l.), Mid-elevation is Numba (700 m a.s.l.), and High elevation is Yawan (1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
 
-Figure 1. Meadian, 1st, second quartiles, 1.5 IRQ distanceT and outliers in biomass, richness diversity and density at each location/elevation, but some Yawan sites were extremely productive.
+Figure 1. Median, 1st, second quadrilles, 1.5 IRQ distance and outliers in biomass, richness diversity and density at each location/elevation, but some Yawan sites were extremely productive.
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 
@@ -97,48 +97,70 @@ Table 1. Test results for over-dispersion all descriptors at three studied eleva
 sjPlot::tab_df(lrr_test_df)
 ```
 
-There is generally little evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. However, results of a GLS model accounting for over-dispersion (using 'varIdent(form = ~1|site)' as weights in the GLS function) were very similar to those obtained from a simple LM model.
+```{r,  echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 
-```{r,  echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
 # Results of a GLS model with over-dispersion vs LM model for density LRR in the predator exclusion treatment.
-
-trtdata <-  trtdata  <- lrdata %>%
+trtdata <-  trtdata  <- DENSITY.LR %>%
     filter(treatment == 'p')
 
-trtlm <- nlme::gls(lratio ~ 0 + site, data = trtdata,
+trtlm <- lm(lratio ~ 0 + site, data = trtdata)
+
+trtgls <- nlme::gls(lratio ~ 0 + site, data = trtdata,
                  weights = varIdent(form = ~1|site))
+
+summary(trtlm)
+summary(trtgls)
+
+
+aovtrt <- anova(trtlm)
+
+testStat <- aovtrt$`F-value`
+testP <- aovtrt$`p-value`
     
-    aovtrt <- anova(trtlm)
-    testStat <- aovtrt$`F-value`
-    testP <- aovtrt$`p-value`
-    
-    print("Model runned")
-    
-    # Tukey post-hoc
-    print("Stage1")
-    emm <- emmeans(object = trtlm,
-                            specs = "site",
-                   adjust = "mvt")
-    
-    print("Post hoc not runned")
-    
-    zero.dif <- ifelse(summary(trtlm)$tTable[,4] > 0.05, "","*")
-    print("zero.dif assigned")
-    
-    # mod_means <- multcomp::cld(object = emm,
-    #                            Letters = letters)$.group
-    
-    paste("a",zero.dif, sep = "") -> res
+# Tukey post-hoc
+emm <- emmeans(object = trtlm,
+               specs = "site",
+               adjust = "mvt")
+
+mod_means <- multcomp::cld(object = emm,
+                           Letters = letters)$.group
+
+zero.dif.lm <- ifelse(summary(trtlm)$coefficients[,4] > 0.05, "","*")
+zero.dif.gls <- ifelse(summary(trtgls)$tTable[,4] > 0.05, "","*")
+
+
+lmres <- as_tibble(summary(trtlm)$coefficients)
+lmres <- rename(lmres, Estimate = 'Estimate', 
+               `Standard Error` = `Std. Error`, 
+               `T-value` =`t value`,
+               `P-value` = `Pr(>|t|)`)
+
+glsres <- as_tibble(summary(trtgls)$tTable)
+glsres <- rename(glsres,
+                 Estimate = 'Value', 
+                 `Standard Error` = "Std.Error", 
+                 `T-value` = "t-value", 
+                 `P-value` = 'p-value')
+
+model_comp <- rbind(lmres, glsres)
+model_comp$Site <- rep(c("Wanang", "Numba", "Yawan"), 2)
+model_comp$Model <- rep(c("LM", "GLS"), each = 3)
 
 ```
 
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+
+
+Table S2. Two models testing difference of LRR of predator exclosures from zero at each elevation.
+
+```{r}
+sjPlot::tab_df(model_comp)
+```
+
+There is generally little evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. Including this in statistical modle (using 'varIdent(form = ~1|site)' as weights in the GLS function) showed significant difference of LRR in Yawan, that was not observed for LM model.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 1. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
+
 library(ggplot2)
-# library(GGally)
-# library(lme4)
-# library(lmerTest)
-# library(ggpmisc)
-# library(tibble)
 
 # bio, dens, div, rich
 panel_data <- data.frame()
@@ -212,3 +234,37 @@ ggplot(panel_data, aes(x = fsite, y = lratio))+
   facet_grid(descriptor ~ ftreatment)
 
 ```
+
+## Impact of treatments
+
+Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation.
+
+Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. 
+
+```{r}
+
+# Check whether the RICHNESS.LR for predators is correct.
+# trtdata <-  trtdata  <- RICHNESS.LR %>%
+#     filter(treatment == 'p')
+
+# trtlm <- lm(lratio ~ 0 + site, data = trtdata)
+
+# summary(trtlm)
+
+# Tukey post-hoc
+# emm <- emmeans(object = trtlm,
+#                specs = "site",
+#                adjust = "mvt")
+
+# mod_means <- multcomp::cld(object = emm,
+#                            Letters = letters)$.group
+
+```
+At high elevation predator removal caused an increase in diversity, richness and density of woody plants. 
+
+Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
+
+
+## LRR correlations
+
+In case of species richness only effect of insect and herbivore addition and removal had strong significant correlation with each other. Herbivore addition and removal were negatively correlated as expected. If there is a compensatory effect there should be no correlation (because when we remove one factor the other takes over and equalize the effect). Positive correlation rules out compensation. All positive correlations suggest bottom-up control.

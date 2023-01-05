@@ -149,8 +149,6 @@ runTest <- function(lrdata, treatment_code = "f", label){
     paste(mod_means,zero.dif, sep = "") -> res
   }
   
-  
-  
   test.df <- data.frame(testType = c("Levene Test", "Bartlett Test", paste(variance, 'anova')),
                         statName = c("F-value", "Bartlett's K-squared", "F-value"),
                         testStat = c(ltest.p$`F value`[1], as.numeric(btest.p$statistic),testStat[1]),
