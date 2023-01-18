@@ -28,7 +28,7 @@ We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), d
 
 Figure 1. Median, 1st, second quadrilles, 1.5 IRQ distance and outliers in biomass, richness diversity and density at each location/elevation, but some Yawan sites were extremely productive.
 
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure S1 Characteistics"}
 
 library(ggplot2)
 library(dplyr)
@@ -237,9 +237,8 @@ ggplot(panel_data, aes(x = fsite, y = lratio))+
 
 ## Impact of treatments
 
-Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation.
+Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation. Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. At high elevation predator removal caused an increase in diversity, richness and density of woody plants.Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
 
-Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. 
 
 ```{r}
 
@@ -260,11 +259,308 @@ Insects reduced biomass only at the mid-elevation, increased diversity at high a
 #                            Letters = letters)$.group
 
 ```
-At high elevation predator removal caused an increase in diversity, richness and density of woody plants. 
-
-Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
-
-
 ## LRR correlations
 
-In case of species richness only effect of insect and herbivore addition and removal had strong significant correlation with each other. Herbivore addition and removal were negatively correlated as expected. If there is a compensatory effect there should be no correlation (because when we remove one factor the other takes over and equalize the effect). Positive correlation rules out compensation. All positive correlations suggest bottom-up control.
+Differences of LRR averages from zero may suggest that the effects are random, generally weak and noisy. We now look at the LRR correlation for different treatments to probe some possible mechanisms of the biotic factors' action.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. ...", fig.width= 10, fig.height= 10}
+
+# library(dplyr)
+# library(ggplot2)
+# library(GGally)
+# library(lme4)
+# library(lmerTest)
+# library(ggpmisc)
+# library(tibble)
+
+# LRR correlation plot
+
+ftreats <- unique(panel_data$ftreatment)
+
+fdat <- panel_data %>%
+  filter(ftreatment == ftreats[1])%>%
+  arrange(descriptor, site, garden)
+
+hdat <- panel_data %>%
+  filter(ftreatment == ftreats[2])%>%
+  arrange(descriptor, site, garden)
+
+idat <- panel_data %>%
+  filter(ftreatment == ftreats[3])%>%
+  arrange(descriptor, site, garden)
+
+pdat <- panel_data %>%
+  filter(ftreatment == ftreats[4])%>%
+  arrange(descriptor, site, garden)
+
+# chdat <- panel_data %>%
+#   filter(ftreatment == ftreats[5])%>%
+#   arrange(descriptor, site, garden)
+
+# Create one dataset
+pdpairs <- panel_data %>%
+  group_by(descriptor, site, garden) %>%
+  summarise() # Summarise based on what??????
+
+# Add columns with LRRs
+pdpairs$f <- fdat$lratio
+pdpairs$h <- hdat$lratio
+pdpairs$i <- idat$lratio
+pdpairs$p <- pdat$lratio
+
+biolrr <- pdpairs %>% filter(descriptor == "Biomass")
+biocont <- BIOMASS  %>% filter(treatment == "c") %>%
+  arrange(as.character(site), garden)
+
+cpdata <- data.frame(descriptor = rep(pdpairs$descriptor,2),
+                     site = rep(pdpairs$site,2),
+                     garden = rep(pdpairs$garden),
+                     x = c(pdpairs$h,
+                           pdpairs$p),
+                     y = rep(pdpairs$i, 2),
+                     response = rep(c("Elevated herbivory effect",
+                                      "Top predators effect"), 
+                                    each = length(pdpairs$descriptor))) 
+
+lrr.cor.test.data <- c()
+
+for (resp in unique(cpdata$response))   {
+  for (desc in unique(cpdata$descriptor)){
+    for (loc in unique(cpdata$site))     {
+      
+      print(paste(resp, desc,loc))
+      
+      lrrtd <- cpdata %>%
+        filter(response == resp,
+               descriptor == desc,
+               site == loc)
+      
+      # np.test.p <- cor.test(lrrtd$x, lrrtd$y, method = c('pearson'))$p.value
+      # Test for noramlity
+      print(shapiro.test(lrrtd$x))
+      print(shapiro.test(lrrtd$y))
+      
+      lm.test.p <- summary(lm(lrrtd$y~lrrtd$x, data = lrrtd))$coefficients[2,4]
+      
+      print(lm.test.p)
+      
+      lrr.res <- data.frame(response = resp,
+                            descriptor = desc,
+                            site = loc,
+                            non.param.p = ifelse(lm.test.p<0.05,"signif","ns"))
+      lrr.cor.test.data <- rbind(lrr.cor.test.data, lrr.res)
+      
+    }
+  }
+}
+
+lrr.cor.test.data -> lctd
+
+cpdata$sign <- ""
+
+sign.dat <- lctd[lctd$non.param.p == "signif",]
+
+for(row in 1:dim(sign.dat)[1]){
+  resp <- sign.dat[row, ]$response
+  desc <- sign.dat[row, ]$descriptor
+  loc <- sign.dat[row, ]$site
+  
+  c1 <- cpdata$response == resp
+  c2 <- cpdata$descriptor == desc
+  c3 <- cpdata$site == loc
+  
+  cpdata[c1 & c2 & c3, ]$sign <- "signif"
+}
+
+ggplot(cpdata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = cpdata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  ylab("Effect size of insects")+
+  xlab("Effect size")+
+  theme_bw()+
+  facet_grid(response*descriptor~site)
+
+```
+
+
+#### OBSERVATIONS
+
+Correlation between LRR of insect effects were not very common and were observed in `r 9/(3*8) * 100` % of cases. Correlations were more often found in Yawan (five out of eight studied correlations) than in Numba (four out of eight) and no significant correlation was found in Wanang. If we also include correlations between predator exclusion (P) and P+A this ratio gets significantly higher for Yawan (9 out of 12 correlations). 
+
+All observed correlations of the top-predators effects were positively correlated with insect effects, whereas all effects of herbivore addition were negatively correlated with the insect effects.
+
+#### EXPLANATION
+
+If a plant community has a potential to be strongly negatively affected by insects (negative LRR of insects, strong top-down control), then the P+A would result in weaker or positive effects of additional generalist herbivores. Top down control seem to be stronger in the highlands and we see more frequent correlation of the LRR's. (Model where Intra-guild predators are being strongly limited by top predators.)
+
+What exactly happened after addition can however only be speculated here. In case of a  strong bottom-up control should not result in any sort of correlation like in Wanang. What I think happened was that spiders could be more active in the exclosures which resulted in their effects being similar to that of a simple exclusion.
+
+A few aspects of insect effects on plants can be important here: 
+If community is saturated with herbivores (Konno) then addition may have negative results.
+Herbivore resource limitation type (relative or absolute). Feeding mode change, adaptive trade off, risk avoidance. All these can only be speculated.
+
+Generalists are worse in consuming any individual plant biomass, therefore they may have positive effects on plants, when natural insect communities have negative effects. It is possible that addition of herbivores cause som disruption in the functioning of the insect community effect on vegetation.
+There were no correlation between factors’ effects on vegetation at the low elevation. Herbivore addition and removal were not correlated as expected by the strong bottom-up control.
+
+
+Simulation showed that it cannot be simply an effect of the effect-abundance relationship between abundance of insects and their effect (quadratic and linear function result in positive relationship).
+
+Top-down effects of predators and their positive correlation with insect effects can be explained well by the bottom-up control of insects by plants. It was also assumed in the above simulations. Empirically we do not observe any correlation between insect abundance and strength of the effect (lrr_simualtions.R at the end). There is also no correlation between richness of a community and its LRR for any of the treatments (lrr_simulations.R).
+
+
+#### SOME DISCLAIMERS
+
+It is noteworthy that plots where herbivores were added were also covered with nets to prevent increased predation, wich is known to be correlated with increased leaf damage (Katka). Therefore it cannot be interpreted directly as a simple increase in herbivory pressure even though this is what should be happening assuming simple chain model and top-down control by top-predators. 
+We do not know the faith of the added predators. It is most likely that they did not cause a permanent increase in the species abundance (graph here). However, herbivore damage in general was...
+
+### Predator exclusion and predator exclusion with insect addition
+
+The hypothesis that I have stated above, about increased activity of spiders in exclosures is here being investigated further. I want to see whether the addition of herbivores has a positive correlation with the regular exclosures. Positive correlation would suggest that the herbivore addition had little to no effect, and that spiders responding to a lack of predators would control the herbivore population even with boosted abundances.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. Log-Response Ratio correlations for insects and fungi effects on bimoass, diversity adn density of woody plants"}
+
+fidata <- data.frame(descriptor = pdpairs$descriptor,
+                     site = pdpairs$site,
+                     garden = rep(pdpairs$garden),
+                     x = pdpairs$p,
+                     y = pdpairs$h)
+
+lrr.cor.test.data <- c()
+
+# for (resp in unique(fidata$response))   {
+  for (desc in unique(fidata$descriptor)){
+    for (loc in unique(fidata$site))     {
+      
+      print(paste(desc,loc))
+      
+      lrrtd <- fidata %>%
+        filter(descriptor == desc,
+               site == loc)
+      
+      # Test for normality
+      print(shapiro.test(lrrtd$x))
+      print(shapiro.test(lrrtd$y))
+      
+      lm.test.p <- summary(lm(lrrtd$y~lrrtd$x, data = lrrtd))$coefficients[2,4]
+      
+      print(lm.test.p)
+      
+      lrr.res <- data.frame(descriptor = desc,
+                            site = loc,
+                            non.param.p = ifelse(lm.test.p<0.05,"signif","ns"))
+      lrr.cor.test.data <- rbind(lrr.cor.test.data, lrr.res)
+      
+    }
+  }
+# }
+
+lrr.cor.test.data -> lctd
+
+fidata$sign <- ""
+
+sign.dat <- lctd[lctd$non.param.p == "signif",]
+
+for(row in 1:dim(sign.dat)[1]){
+  # resp <- sign.dat[row, ]$response
+  desc <- sign.dat[row, ]$descriptor
+  loc <- sign.dat[row, ]$site
+  
+  # c1 <- cpdata$response == resp
+  c2 <- fidata$descriptor == desc
+  c3 <- fidata$site == loc
+  
+  fidata[c2 & c3, ]$sign <- "signif"
+}
+
+ggplot(fidata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = fidata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  xlab("Predator removal")+
+  ylab("Predator removal and insect addition")+
+  theme_bw()+
+  facet_grid(descriptor~site)
+
+```
+From the figure we see that there is usually no correlation in Wanang and Numba but it is always present in Yawan. Moreover it is not positive but negative. This means that when we observer negative effect of predator removal on biomass we can expect to have positive effect of insect addition to the exclosure. In cases where the effect of predators is positive, we would get a negative effect of insect addition.
+
+### Fungi vs insect correlation
+No correlation should be observed in case of compensatory effect
+In case of species richness only effects of insect, herbivore addition and herbivore removal were correlated. Herbivore addition and removal were negatively correlated as expected. If there is a compensatory effect there should be no correlation (because when we remove one factor the other takes over and equalize the effect). Positive correlation rules out compensation. A positive correlations would suggest bottom-up control.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. Log-Response Ratio correlations for insects and fungi effects on bimoass, diversity adn density of woody plants"}
+
+fidata <- data.frame(descriptor = pdpairs$descriptor,
+                     site = pdpairs$site,
+                     garden = rep(pdpairs$garden),
+                     x = pdpairs$i,
+                     y = pdpairs$f)
+
+lrr.cor.test.data <- c()
+
+# for (resp in unique(fidata$response))   {
+  for (desc in unique(fidata$descriptor)){
+    for (loc in unique(fidata$site))     {
+      
+      print(paste(desc,loc))
+      
+      lrrtd <- fidata %>%
+        filter(descriptor == desc,
+               site == loc)
+      
+      # Test for normality
+      print(shapiro.test(lrrtd$x))
+      print(shapiro.test(lrrtd$y))
+      
+      lm.test.p <- summary(lm(lrrtd$y~lrrtd$x, data = lrrtd))$coefficients[2,4]
+      
+      print(lm.test.p)
+      
+      lrr.res <- data.frame(descriptor = desc,
+                            site = loc,
+                            non.param.p = ifelse(lm.test.p<0.05,"signif","ns"))
+      lrr.cor.test.data <- rbind(lrr.cor.test.data, lrr.res)
+      
+    }
+  }
+# }
+
+lrr.cor.test.data -> lctd
+
+fidata$sign <- ""
+
+sign.dat <- lctd[lctd$non.param.p == "signif",]
+
+for(row in 1:dim(sign.dat)[1]){
+  # resp <- sign.dat[row, ]$response
+  desc <- sign.dat[row, ]$descriptor
+  loc <- sign.dat[row, ]$site
+  
+  # c1 <- cpdata$response == resp
+  c2 <- fidata$descriptor == desc
+  c3 <- fidata$site == loc
+  
+  fidata[c2 & c3, ]$sign <- "signif"
+}
+
+ggplot(fidata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = fidata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  ylab("Effect size of insects")+
+  xlab("Effect size of fungi")+
+  theme_bw()+
+  facet_grid(descriptor~site)
+
+
+```
