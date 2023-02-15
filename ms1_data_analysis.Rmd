@@ -160,8 +160,6 @@ There is generally little evidence for the over-dispersion in the LRR values at 
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 1. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
 
-library(ggplot2)
-
 # bio, dens, div, rich
 panel_data <- data.frame()
 
@@ -562,5 +560,224 @@ ggplot(fidata, aes(x = x, y = y)) +
   theme_bw()+
   facet_grid(descriptor~site)
 
+
+```
+### COMMUNITY COMPOSITION
+
+At each elevation insect exclusion significantly affected the community composition [but only when all treatments were included, in pairwise comparisons, i.e., C vs I the composition was not changed significantly]. Fungicide treatment significantly affected the full plant community composition only at the highest elevation (Fig, 3; Appendix I, Tab. S1).
+
+```{r}
+
+library(vegan)
+# library(shape)  
+# library(ggpubr)
+library(cowplot)
+
+# 1. Load the data ----
+COMMDATA <- t(COMMDATA)
+COMMVARS
+
+# Select only i,c,p,f
+COMM.SEL <- COMMDATA[grepl("i|c$|p|f|_h", rownames(COMMDATA)), ]
+VARS.SEL <- COMMVARS[grepl("i|c$|p|f|_h", COMMVARS$plotid), ]
+
+# For each elevation calculate inertia for each treatment. This is in order to 
+# evaluate whether some sites have the differences more strongly pronounced
+# site.id <- "n"
+# SUB.DATA <- COMMDATA[grepl(site.id, rownames(COMMDATA)), ]
+# SUB.VARS <- COMMVARS[grepl(site.id, COMMVARS$plotid), ]
+# 
+# treats.to.consider <- c("i","c","h","f","p")
+# sub.data.ttc <- SUB.VARS %>%
+#   filter(treatment %in% treats.to.consider)
+# 
+# ## Dummy-coding of the treatments ----
+# COMMVARS <- COMMVARS %>%
+#   mutate(f = ifelse(treatment == "f", 1, 0),
+#          h = ifelse(treatment == "h", 1, 0),
+#          p = ifelse(treatment == "p", 1, 0),
+#          c = ifelse(treatment == "c", 1, 0),
+#          i = ifelse(treatment == "i", 1, 0))
+# 
+# rdamod <- rda(COMMDATA~f+h+p+i+Condition(garden + site), 
+#               data = COMMVARS)
+# 
+# 
+# rda.w <- rda(decostand(SUB.DATA, 
+#                        method = 'hellinger')~treatment+Condition(garden), 
+#              data = SUB.VARS)
+
+# 2. Fitting SLA surfaces to ordination ----
+
+# WARNING: these are data that haven't been fixed yet
+
+
+## Species traits for evaluation ----
+# c1 <- mainDataT$treatment %in% treats.to.consider
+# c2 <- mainDataT$unified_names %in% names(rdamod$colsum)
+# c3 <- substr(mainDataT$site,1,1) == site.id
+# 
+# speciesSLA <- mainDataT[c1 & c2 & c3, c("unified_names", "sla.d.m2kg1")] # Ind sp SLA is it possible?
+# 
+# summary.sp.sla <- speciesSLA %>%
+#   group_by(unified_names) %>%
+#   summarise(mean.sla = mean(sla.d.m2kg1, na.rm = T))
+# 
+# ## CWM for sites ----
+# cwmFun <- function(sla.d.m2kg1, tot_bio){
+#   return(mean(sla.d.m2kg1*(tot_bio/sum(tot_bio, na.rm = T)), na.rm = T))
+# }
+# 
+# cwmFun(mainDataT$sla.d.m2kg1, mainDataT$tot_bio)
+# 
+# siteSLA <- mainDataT %>%
+#   filter(unified_names %in% trait.dat[trait.dat$Life.form == "woody", ]$dsName) %>%
+#   mutate(tot_bio = ifelse(is.infinite(tot_bio), NA, tot_bio),
+#          sla.d.m2kg1 = ifelse(is.infinite(sla.d.m2kg1), NA, sla.d.m2kg1)) %>%
+#   group_by(site, garden, treatment) %>%
+#   summarise(cwm.sla = cwmFun(sla.d.m2kg1, tot_bio))
+# 
+# siteSLAdf <- as.data.frame(siteSLA)
+# 
+# rownames(siteSLAdf) <- paste(substr(siteSLA$site,1,1), 
+#                              siteSLA$garden, 
+#                              "_", 
+#                              siteSLA$treatment, sep = "")
+
+
+
+# 3. RDA at each elevation ----
+
+## 3.1 Analyses for each elevation ----
+
+
+plot.list <- list()
+
+for(site.id in substr(unique(COMMVARS$site),1,1)){
+  
+  print(site.id)
+  
+  SUB.VARS <- COMMVARS %>%
+    filter(grepl(site.id, plotid) & treatment %in% treats.to.consider)
+  
+  SUB.DATA <- COMMDATA[SUB.VARS$plotid, ]
+  SUB.DATA <- decostand(SUB.DATA, method = 'hellinger')
+  # Perform RDA and ANOVA and print the results
+  rdamod <- rda(SUB.DATA~f+h+p+i+Condition(garden), 
+                data = SUB.VARS)
+  
+  h <- how(blocks = SUB.VARS$garden)
+  
+  print(anova(rdamod, permutations = h, by = "terms"))
+  
+  # Goodness of fit
+  # plot(rdamod, type= "n", dis="sp")
+
+  # Goodness
+  gdnsof <- goodness(rdamod, model = "CCA", proportional = T)
+  gof2ax <- gdnsof[,1] + gdnsof[,2]
+  cgof <- gof2ax[gof2ax > 0.2]
+  cgof <- sort(cgof, decreasing = T)
+  sign.names <- names(cgof[!is.na(cgof) & !is.infinite(cgof)])
+  
+  # print(cgof[!is.na(cgof) & !is.infinite(cgof)])
+  
+  # Inertia
+  # inertia <- inertcomp(rdamod, proportional = T)
+  # inttresh <- inertia[inertia[,2] > 0.2, 2]
+  # sign.names <- names(inttresh[!is.na(inttresh)])
+  
+  # Significant vectors
+  # sign.sp <- envfit(rdamod, SUB.DATA)
+  # sign.names <- names(sign.sp$vectors$pvals[sign.sp$vectors$pvals < 0.05])
+  
+  colors <- as.numeric(as.factor(SUB.VARS$treatment))
+  
+  # rda.dat <- invisible(plot(rdamod))
+  
+  # Alternative way to obtain these
+  rda.dat <- list(sites = rdamod$CCA$wa[, c(1,2)],
+                  species = rdamod$CCA$v[, c(1,2)],
+                  biplot = rdamod$CCA$biplot[, c(1,2)])
+  
+  sites.dat <- as.data.frame(rda.dat$sites) %>%
+    mutate(codes = rownames(rda.dat$sites),
+           treats = ifelse(grepl("c", codes),"c",
+                           ifelse(grepl("f", codes),"f", 
+                                  ifelse(grepl("h", codes), "h", 
+                                         ifelse(grepl("i", codes), "i","p")))),
+           shapes = as.numeric(as.factor(treats)))
+  
+  species.dat <- as.data.frame(rda.dat$species) %>%
+    mutate(names = rownames(as.data.frame(rda.dat$species)))
+  
+  arrow.dat <- as.data.frame(rda.dat$biplot) %>%
+    mutate(treats = rownames(as.data.frame(rda.dat$biplot)))
+  
+  if(site.id == "y"){
+    arr.col <- c("red","black","black","red")
+    arr.lwd <- c(0.5,0.1,0.1,0.5)
+    arr.lty <- c(1,2,2,1)
+  } else {arr.col <- c("black","black","black","red")
+  arr.lwd <- c(0.1,0.1,0.1,0.5)
+  arr.lty <- c(2,2,2,1)
+  }
+  
+  p1 <- ggplot(sites.dat,aes(x = RDA1, y = RDA2))+
+    geom_point(aes(colour = treats), pch = sites.dat$shapes+14) + 
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) + 
+    geom_vline(xintercept = 0, lty = 2, alpha = 0.5) + 
+    geom_segment(data = arrow.dat, aes(x = 0, y = 0, 
+                                       xend = RDA1, yend = RDA2),
+                 arrow = arrow(length=unit(0.30,"cm"), 
+                               ends="last", 
+                               type = "closed"),
+                 alpha = 0.8, 
+                 col = arr.col,
+                 lwd = arr.lwd,
+                 lty = arr.lty)+
+    geom_text(data = arrow.dat, aes(x = RDA1*1.1, y = RDA2*1.1, 
+                                    label = treats),
+              cex = 5)+
+    theme_minimal()
+  
+  # scalar = 2.5
+  
+  p2 <- ggplot(species.dat, aes(x = RDA1*1.1, y = RDA2*1.1)) + 
+    geom_text(data = species.dat %>%
+                filter(names %in% sign.names), aes(label = names))+
+    geom_segment(data = arrow.dat, aes(x = 0, y = 0, 
+                                       xend = RDA1, yend = RDA2),
+                 arrow = arrow(length=unit(0.30,"cm"), 
+                               ends="last", 
+                               type = "closed"),
+                 alpha = 0.8, 
+                 col = arr.col,
+                 lwd = arr.lwd,
+                 lty = arr.lty)+
+    geom_text(data = arrow.dat, aes(x = RDA1*1.1, y = RDA2*1.1, 
+                                    label = treats))+
+    theme_minimal()
+  
+  plot.list[[site.id]] <- list(sites.ord = as_grob(p1),
+                               species.ord = as_grob(p2))
+  
+  # surfDat <- siteSLAdf[rownames(rdamod$CCA$u),]
+  # print(ordisurf(rdamod ~ cwm.sla, data = surfDat, bubble = 5))
+  
+}
+
+## 3.2 Plot the ordination ----
+# tiff(filename='figures/ordination_panel.tif',
+#      height=5600,
+#      width=5200,
+#      units='px',
+#      res=800,compression='lzw')
+ggpubr::ggarrange(plot.list[["w"]]$sites.ord,
+                  plot.list[["w"]]$species.ord,
+                  plot.list[["n"]]$sites.ord,
+                  plot.list[["n"]]$species.ord,
+                  plot.list[["y"]]$sites.ord,
+                  plot.list[["y"]]$species.ord, ncol = 2, nrow = 3)
 
 ```

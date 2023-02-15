@@ -12,6 +12,10 @@ $$ \begin{matrix} \frac{dP}{dt} = rP \left( 1-\frac{P}{K} \right)-\frac{\Omega_{
  dS = -x_SS \left( 1- \frac{\Omega_{SH}y_SH}{H+H_0}\right)- \frac{(1-\Omega_{BH})y_Bx_BSB}{\Omega_{BH}H+(1-\Omega_{BH})S+H_0} \\
     dB = -x_BB \left( 1-\frac{\Omega_{BH}y_BH+(1-\Omega_{BH})y_BS}{\Omega_{BH}H+(1-\Omega_{BH})S+H_0)} \right) \end{matrix}$$
 
+Parameters are: $\Omega_ij$ preference of a consumer $i$ to a resource $j$. $x_i$ - mass specific metabolic rate, $y_i$ - measure of ingestion rate. There is no indication of an attack rate, would that be the $x_i$? $y_i$ is limited by an animal's physiological capacity.
+
+
+
 ```{r}
 library(deSolve)
 # Define full model
@@ -25,38 +29,215 @@ fullModule <- function(t, state, parameters) {
   })
 }
 
-params <- c(r = 1         ,
+reducedModule <- function(t, state, parameters) {
+  # This models the a simple food chain without the top predators
+  with(as.list(c(state, parameters)),{
+    dP <-  r*P*(1-P/K)-(o_HP*x_H*y_H*P*H)/(P+P0)
+    dH <- -x_H*H*(1-(o_HP*y_H*P)/(P+P0))-(o_SH*x_S*y_S*H*S)/(H+H0)
+    dS <- -x_S*S*(1-(o_SH*y_S*H)/(H+H0))
+    list(c(dP,dH,dS))
+  })
+}
+
+# Remove metabolic rate from the biomass removal equation
+# fullModule <- function(t, state, parameters) {
+#   with(as.list(c(state, parameters)),{
+#     dP <-  r*P*(1-P/K)-(o_HP*y_H*P*H)/(P+P0)
+#     dH <- -x_H*H*(1-(o_HP*y_H*P)/(P+P0))-(o_SH*y_S*H*S)/(H+H0)-(o_BH*y_B*H*B)/(o_BH*H+(1-o_BH)*S+H0)
+#     dS <- -x_S*S*(1-(o_SH*y_S*H)/(H+H0))-((1-o_BH)*y_B*S*B)/(o_BH*H+(1-o_BH)*S+H0)
+#     dB <- -x_B*B*(1-(o_BH*y_B*H+(1-o_BH)*y_B*S)/(o_BH*H+(1-o_BH)*S+H0))
+#     list(c(dP,dH,dS,dB))
+#   })
+# }
+# 
+# reducedModule <- function(t, state, parameters) {
+#   # This models the a simple food chain without the top predators
+#   with(as.list(c(state, parameters)),{
+#     dP <-  r*P*(1-P/K)-(o_HP*y_H*P*H)/(P+P0)
+#     dH <- -x_H*H*(1-(o_HP*y_H*P)/(P+P0))-(o_SH*y_S*H*S)/(H+H0)
+#     dS <- -x_S*S*(1-(o_SH*y_S*H)/(H+H0))
+#     list(c(dP,dH,dS))
+#   })
+# }
+
+
+# mass specific metabolic rate
+metabolic_rate_herbivores <- 0.2
+metabolic_rate_birds <- 0.08
+metabolic_rate_spiders <- 0.3
+
+# ingestion rate per unit metabolic rate of species i
+ingestion_rate_herbivores <- 1.5
+ingestion_rate_birds <- 5
+ingestion_rate_spiders <- 2.1
+
+half_sat_plants <- 0.2
+half_sat_herbivores <- 0.5
+
+params_fm <- c(r = 1         ,
             K = 1       , # environmental 
             
             
-            o_BS = 0.7    , # preference of birds for spiders
-            o_BH = 0.3    , # preference of birds for herbivores
+            o_BS = 0.6    , # preference of birds for spiders
+            o_BH = 0.4    , # preference of birds for herbivores
             o_HP = 1      , # preference of herbivores for plants
             o_SH = 1      , # preference of spiders for herbivores
             
             
-            x_H  = 0.2    ,
-            x_B  = 0.08   ,
-            x_S  = 0.5    ,
+            x_H  = metabolic_rate_herbivores,
+            x_B  = metabolic_rate_birds,
+            x_S  = metabolic_rate_spiders,
             
-            y_H  = 2.009  ,
-            y_B  = 5      ,
-            y_S  = 3.5    ,
+            y_H  = ingestion_rate_herbivores  , 
+            y_B  = ingestion_rate_birds  ,
+            y_S  = ingestion_rate_spiders    , # ing.rates
             
-            P0   = 0.16129,
-            H0   = 0.9
+            P0   = half_sat_plants,
+            H0   = half_sat_herbivores) 
+
+params_rm <- c(r = 1         ,
+               K = 1       , # environmental 
             
-            ) 
+            
+               o_HP = 1      , # preference of herbivores for plants
+               o_SH = 1      , # preference of spiders for herbivores
+            
+            
+               x_H  = metabolic_rate_herbivores,
+               x_S  = metabolic_rate_spiders,
+            
+               y_H  = ingestion_rate_herbivores  , 
+               y_B  = ingestion_rate_birds  ,
+               y_S  = ingestion_rate_spiders ,
+               
+               P0   = half_sat_plants,
+               H0   = half_sat_herbivores) 
 
-state <- c(P = 0.5, H = 0.5, S = 0.5, B = 0.5)
-times <- seq(0,500, by = 0.1)
 
-out <- ode(y = state, times = times, func = fullModule, parms = params)
+stateFM <- c(P = 0.5, H = 0.5, S = 0.5, B = 0.5)
+stateRM <- c(P = 0.5, H = 0.5, S = 0.5)
+times <- seq(0,900, by = 0.1)
 
-matplot(out[,-1], type = "l")
-plot(log(out[dim(out)[1],-1]))
+outFM <- ode(y = stateFM, times = times, func = fullModule,    parms = params_fm)
+outRM <- ode(y = stateRM, times = times, func = reducedModule, parms = params_rm)
+
+library(reshape2)
+df.fm <- data.frame(time = 1:nrow(outFM), outFM[,-1])
+df.fm.melt <- melt(df.fm, id = "time")
+df.fm.melt$model <- "Full Model"
+
+df.rm <- data.frame(time = 1:nrow(outRM), outRM[,-1])
+df.rm.melt <- melt(df.rm, id = "time")
+df.rm.melt$model <- "Reduced Model"
+
+df.bm <- rbind(df.fm.melt, df.rm.melt)
+
+library(ggplot2)
+ggplot(df.bm, aes(x = time, y = log(value), color = variable))+
+  geom_line()+
+  facet_wrap(~model, scales = "free")
+
 ```
 
-Now that we have a functioning moel we can try to scan the parameter space of interaction strength as it was done in the mentioned paper. 
+Now that we have a functioning model we can try to scan the parameter space of **interaction strength** as it was done in the mentioned paper.
 
-Interaction strength was calculated as $$ \alpha_{i,j} $$
+The per-capita interaction strength of resource i on consumer k was defined as $$ \alpha_{k,i} = \frac{K_k(i)}{i} = \frac{\Omega_{ki}x_ky_k}{\Omega_{ki}i + (1 - \Omega_{ki})j + i_0} $$
+
+The **interaction strength** was defined as the maximum per capita interaction strength of resource of resource species j on the consumer species i. Per capita interaction strength is maximum when densities of j and i approach zero. Therefore: $$ I_{ki} = \frac{\Omega_{ki}x_ky_k}{i_0} $$ 
+
+But we will get to that later. Now a sample of what the algorithm can do.
+
+First of all we need to focus mainly on an abstract relations between parameters. We are not interested how did parameters change but rather what phenomenons (like a change in interaction strength) can explain, at least qualitatively, the observed patterns in LRR.
+
+Possible hypotheses. The advantage of the above model is a possibility of estimation of plausible values of the $x_k$ and $y_k$ parameters as well as working with interaction strengths. This allows us to form our hypothesis in terms of interaction strengths:
+
+1. Spiders feed more on herbivores - interaction strength increases in the absence of predators?
+What I would need is a model where the capture rates are explicit. But I can maybe work with what I have here.
+
+What are the parameters and what do I know about them.    
+
+```{r}
+# I can manipulate three parameters, lets say
+runModel <- function(r=1,K=1, o_BS=0.7, o_BH=0.3, o_HP=1, o_SH=1, x_H=0.01, x_B=0.0008,
+                     x_S=0.02, y_H=2.009, y_B=4, y_S=3.5, P0=0.16129,H0=0.9, rr = 1, rK = 1,
+                     ro_HP = 1, ro_SH = 1, rx_H=0.01, rx_S=0.02, ry_H  = 2.009, ry_S  = 3.5,
+                     rP0=0.16129,rH0=0.9,
+                     stateFM = c(P = 0.5, H = 0.5, S = 0.5, B = 0.5),
+                     stateRM = c(P = 0.5, H = 0.5, S = 0.5),
+                     times = seq(0,900, by = 0.1)) {
+  params_fm <- c(r=r,
+                 K=K,
+                 o_BS = o_BS,
+                 o_BH = o_BH,
+                 o_HP = o_HP,
+                 o_SH = o_SH,
+                 x_H  = x_H,
+                 x_B  = x_B,
+                 x_S  = x_S,
+                 y_H  = y_H,
+                 y_B  = y_B,
+                 y_S  = y_S,
+                 P0   = P0,
+                 H0   = H0) 
+  params_rm <- c(r    = rr,
+                 K    = rK,
+                 o_HP = ro_HP,
+                 o_SH = ro_SH,
+                 x_H  = rx_H,
+                 x_S  = rx_S,
+                 y_H  = ry_H,
+                 y_S  = ry_S,
+                 P0   = rP0,
+                 H0   = rH0) 
+# Itegrate 
+outFM <- ode(y = stateFM, times = times, func = fullModule,    parms = params_fm)
+outRM <- ode(y = stateRM, times = times, func = reducedModule, parms = params_rm)
+df.fm <- data.frame(time = 1:nrow(outFM), outFM[,-1])
+df.fm.melt <- melt(df.fm, id = "time")
+df.fm.melt$model <- "Full Model"
+df.rm <- data.frame(time = 1:nrow(outRM), outRM[,-1])
+df.rm.melt <- melt(df.rm, id = "time")
+df.rm.melt$model <- "Reduced Model"
+df.bm <- rbind(df.fm.melt, df.rm.melt)
+return(df.bm)
+}
+
+x_H.seq <- seq(from = 0.001, to = 0.2, by = 0.005)
+
+full.data <- data.frame()
+
+for (x_H.val in x_H.seq) {
+  mod.data <- runModel(x_H = x_H.val)
+  mod.data$x_H.par <- x_H.val
+  full.data <- rbind(full.data, mod.data)
+  print(x_H.val)
+}
+
+
+ggplot(full.data, aes(x = time, y = log(value), color = variable))+
+  geom_line()+
+  facet_grid(model~x_H.par)
+
+```
+```{r}
+ 
+# Build the model-up starting with just plants add herbivores, spiders, and birds
+
+# Step 1 plants
+
+stateS1 <- c()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
