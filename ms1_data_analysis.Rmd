@@ -1353,23 +1353,18 @@ However there are a few contingent effects that make interpretation of this rela
 
 Taking the above considerations into account we formulated the final statistical model. The response variable was the $\Delta$Biomass. We tested whether it is dependent on SLA but also include the corresponding *site richness* and the *abundance of co-specifics* as co-variate. To test treatment influence on $\Delta$Biomass vs SLA relationship we included the interaction between SLA and treatment variable. We repeated model for each site and evaluated the model performance to compare power of SLA to predict the biomass changes at each elevation. We added a quadratic term for the Phylogenetic correlations are preserved:
 
-#### Complex model model
-$\Delta$Biomass ~ 
-SLA $\times$ site + SLA^2 $\times$ site + 
-water.content $\times$ site + water.content^2 $\times$ site + 
-perc.herb $\times$ site  + perc.herb^2 $\times$ site + 
-richness + abundance + $\Delta$SLA + 
-(Phylogenetic structure). 
+Explore that visually
 
-Random effect is not necessary because we have paired comparisons of control vs treatment within the same garden. **Another option** is to include site as a random factor and get rid of all the interaction terms.
+#### Insecticide 
 
-This model needs to be applied separately for each treatment comparison.
-
-First we analyse the focused model, where we use only SLA as a predictor of species' success. Further we compare the models' performance between sites to explore the idea that SLA is an increasingly better predictor of a species responses with elevations.
-
-#### 1.1 Insecticide
+##### Change in Biomass: log-respose ratio of a species' biomass
 
 ```{r}
+
+# Get the delta data ready for th e given subset vars (comparison)
+
+subsetVars <- c("c", "i")
+
 # Create data-set for a given treatment
 deltaData <- data.frame()
 
@@ -1432,6 +1427,222 @@ deltaData <- deltaData %>%
           mutate(lest.leaf.area = log(est.leaf.area))%>%
   filter(!is.infinite(lest.leaf.area))
 
+```
+
+Below I explore nonlinear relationships of the biomass log-ratios with species traits. Nonlinear relationships are introduced to allow for optimum trait values.
+
+```{r}
+
+# Log-response ratios of total biomass vs of sla
+
+
+# DeltaBiomass vs SLA at each site
+slaPlot <- ggplot(deltaData, aes(x = lsla.d, y = lrrtb, color = site)) +
+  geom_point()+
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
+
+# There might be some effect of site.
+# DeltaBiomass vs SLA at each site
+wcPlot <- ggplot(deltaData, aes(x = water.cont, y = lrrtb, color = site)) +
+  geom_point()+
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
+# Seems like the effect is not very strong either
+
+herbPlot <- ggplot(deltaData, aes(x = perc.herb, y = lrrtb, color = site)) +
+  geom_point()+
+  geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + 
+  scale_x_continuous(trans = 'log2')
+
+ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
+
+```
+It seems that in some cases the nonlinear relationship may be important. Generally water content looks linear for each elevation. We will include this and build also a model that models log-ratio biomass vs water content as a linear relationship. We arrive to the final definition of the full model.
+
+$\Delta$Biomass ~ SLA $\times$ site + SLA^2 $\times$ site + 
+water.content $\times$ site + water.content^2 $\times$ site + 
+perc.herb $\times$ site  + perc.herb^2 $\times$ site + 
+richness + abundance + $\Delta$SLA + 
+(Phylogenetic structure). 
+
+```{r}
+simple.sla <- gls(
+  lrrtb ~ lsla.d*site + I(lsla.d^2)*site + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+just.sla <- gls(
+  lrrtb ~ lsla.d*site + I(lsla.d^2)*site,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+
+AIC(just.sla, simple.sla)
+anova(just.sla, simple.sla) # simple SLA is much bette
+tab_model(simple.sla) # But only the lrr SLA is significant.
+
+# Run the full model.
+full.sla <- gls(
+  lrrtb ~ lsla.d*site + I(lsla.d^2)*site + water.cont*site + I(water.cont^2)*site + perc.herb*site + I(perc.herb^2)*site + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+# Assuming linear relationships
+full.sla.linear <- gls(
+  lrrtb ~ lsla.d*site + water.cont*site + perc.herb*site + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+anova(simple.sla, full.sla.linear) # full SLA linear is much better that the one using SLA
+tab_model(full.sla.linear)
+
+full.sla.linear.noint <- gls(
+  lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla + site,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+anova(full.sla.linear, full.sla.linear.noint)
+# Removing interactions does not improve the model significantly
+tab_model(full.sla.linear.noint)
+
+# Add interaction only to the water content and sla
+full.sla.linear.intslawc <- gls(
+  lrrtb ~ lsla.d*site + water.cont*site + perc.herb + richness + labu + lrrsla + site,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+anova(full.sla.linear.noint, full.sla.linear.intslawc)
+# No effect
+tab_model(full.sla.linear.noint)
+
+full.sla.linear.intsla <- gls(
+  lrrtb ~ lsla.d*site + water.cont + perc.herb + richness + labu + lrrsla + site,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+anova(full.sla.linear.noint, full.sla.linear.intsla)
+# Any for of iteraction is not improving the model
+tab_model(full.sla.linear.noint) # Thus the simplest model seems to be best.
+
+# I further compare to the full.sla.linear.noint model.
+# Only water content is modeled as linear
+full.sla.custom <-  gls(
+  lrrtb ~ lsla.d*site + I(lsla.d^2)*site + water.cont*site + perc.herb*site + I(perc.herb^2)*site + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+anova(full.sla.linear.noint, full.sla.custom)
+
+
+full.sla.custom.noint <-  gls(
+  lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + perc.herb + I(perc.herb^2) + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+full.sla.linear.noint.nosite <- gls(
+  lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
+                data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+  method = "ML"
+  )
+
+# Withouth a site it is even better
+anova(full.sla.linear.noint, full.sla.linear.noint.nosite)
+
+
+# The linear model remains the best one.
+plot(full.sla.linear.noint.nosite) # This plot looks best
+```
+
+Table. Results of the selected model for the deltaBio.
+
+```{r}
+sjPlot::tab_model(full.sla.linear.noint.nosite)
+```
+
+Nevertheless it is not a strong correlation and does not explain a lot of variation in the biomass change.
+
+```{r, fig.cap="Observed vs predicted values for the lsls.d and "}
+preddata <- data.frame(lsla.d = seq(from = min(deltaData$lsla.d, na.rm = T), 
+                                  to = max(deltaData$lsla.d, na.rm = T), 
+                                  length = 100),
+                       water.cont = mean(deltaData$water.cont, na.rm = T), 
+                       perc.herb= mean(deltaData$perc.herb, na.rm = T), 
+                       richness= mean(deltaData$richness, na.rm = T), 
+                       labu= mean(deltaData$labu, na.rm = T),
+                       lrrsla= mean(deltaData$lrrsla, na.rm = T))
+
+preddatalrrsla <- data.frame(lsla.d = mean(deltaData$lsla.d, na.rm = T),
+                       water.cont = mean(deltaData$water.cont, na.rm = T), 
+                       perc.herb= mean(deltaData$perc.herb, na.rm = T), 
+                       richness= mean(deltaData$richness, na.rm = T), 
+                       labu= mean(deltaData$labu, na.rm = T),
+                       lrrsla=  seq(from = min(deltaData$lrrsla, na.rm = T), 
+                                  to = max(deltaData$lrrsla, na.rm = T), 
+                                  length = 100))
+
+visData <- deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label)
+
+predvals <- AICcmodavg::predictSE.gls(full.sla.linear.noint.nosite, newdata = preddata,
+                    newdtype = 'response')
+
+preddata$predvals <- predvals$fit
+preddata$predse <- predvals$se.fit
+
+predvalslrrsla <- AICcmodavg::predictSE.gls(full.sla.linear.noint.nosite, newdata = preddatalrrsla,
+                    newdtype = 'response')
+
+preddatalrrsla$predvals <- predvalslrrsla$fit
+preddatalrrsla$predse <- predvalslrrsla$se.fit
+
+# For lsla.d
+p1 <- ggplot(preddata, aes(x = lsla.d, y = predvals)) + 
+  geom_line()+
+  geom_ribbon(aes(ymin = predvals - predse,
+                  ymax = predvals + predse), 
+              alpha = 0.1) + 
+  geom_point(data = visData, aes(x = lsla.d, y = lrrtb)) + 
+  ggtitle("Log(SLA) vs Log-response ratio of a species' biomass")
+
+# For lrrsla
+p2 <- ggplot(preddatalrrsla, aes(x = lrrsla, y = predvals)) + 
+  geom_line()+
+  geom_ribbon(aes(ymin = predvals - predse,
+                  ymax = predvals + predse), 
+              alpha = 0.1) + 
+  geom_point(data = visData, aes(x = lrrsla, y = lrrtb)) +
+  ggtitle("Delta(SLA) vs Log-response ratio of a species' biomass")
+
+
+# ggplot(visData, aes(x = lsla.d, y = lrrtb)) + 
+#   geom_point(aes(size = tot_bio, alpha = 0.05), pch = 19)+
+#   geom_point(aes(x = lsla.d, y = predvals, col = "red")) + 
+#   geom_smooth(aes(x = lsla.d, y = predvals), method = "lm")
+
+ggpubr::ggarrange(p1,p2)
+
+```
+
+In general there is some evidence for the change in total biomass to be driven by the sla. Water content and log-response ratios of SLA are significantly affecting the change in total biomass. The change however might be determined by a strong correlation at one site only: Wanang. Higher water content results in positive change in biomass of a species, while if we have large increase in SLA of a species that was correlated with reduction of a species' biomass. **None of the interactions with site were significant.**
+
+Random effect is not necessary because we have paired comparisons of control vs treatment within the same garden. **Another option** is to include site as a random factor and get rid of all the interaction terms.
+
+This model needs to be applied separately for each treatment comparison.
+
+First we analyse the focused model, where we use only SLA as a predictor of species' success. Further we compare the models' performance between sites to explore the idea that SLA is an increasingly better predictor of a species responses with elevations.
+
+The model above has the interactive effect of site, but later I perform analyses at each site separately. **Which approach should I choose?**
+
+However, when we analyse the data separately for each elevation we are getting a different results **if we only use the lsla.d variable**. The more realistic models could change this relationship, i.e., when we include also the effects of species richness and other traits as we did above.
+
+```{r, include=FALSE}
 # The Focused model
 # Only the predictive power of SLA, water content and percentage herbivory on deltaBio
 
@@ -1440,7 +1651,15 @@ wdata <- deltaData %>%
   filter(unified_names %in% myTree.rand.poly$tip.label) %>%
   filter(site == "wanang")
 
-dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d,
+# dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d,
+#                      data = wdata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282, 
+#                                               phy = myTree.rand.poly, 
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
+dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
                      data = wdata,
                      method = "ML",
                      correlation = corMartins(2.718282, 
@@ -1448,6 +1667,7 @@ dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d,
                                               form = ~unified_names,
                                               fixed = T),
                      na.action = na.omit)
+
 
 # Model results
 
@@ -1471,7 +1691,15 @@ ndata <- deltaData %>%
   filter(unified_names %in% myTree.rand.poly$tip.label) %>%
   filter(site == "numba")
 
-dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d,
+# dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d,
+#                      data = ndata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282, 
+#                                               phy = myTree.rand.poly, 
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
+dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
                      data = ndata,
                      method = "ML",
                      correlation = corMartins(2.718282, 
@@ -1500,11 +1728,20 @@ ydata <- deltaData %>%
   filter(site == "yawan")
 
 # The model
-dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d,
+# dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d,
+#                      data = ydata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282, 
+#                                               phy = myTree.rand.poly, 
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
+
+dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
                      data = ydata,
                      method = "ML",
-                     correlation = corMartins(2.718282, 
-                                              phy = myTree.rand.poly, 
+                     correlation = corMartins(2.718282,
+                                              phy = myTree.rand.poly,
                                               form = ~unified_names,
                                               fixed = T),
                      na.action = na.omit)
@@ -1522,16 +1759,13 @@ ydata <- ydata %>%
 mse_focused_df <- rbind(mse_focused_df,  
                         data.frame(mse = with(ydata, mean((lrrtb - preds))^2),
                                    treatment = "Insecticide", site = "Yawan"))
-```
 
-```{r, results='asis'}
 library(sjPlot)
 
 tab_model(dd.gls.focsed.w, dd.gls.focsed.n, dd.gls.focsed.y)
 
-```
 
-```{r, fig.cap = "Empirical and predicted values of a simple model of biomass change vs logarithm of SLA for each studied sites."}
+# fig.cap = "Empirical and predicted values of a simple model of biomass change vs logarithm of SLA for each studied sites."}
 
 # Plot the relationship and add predicted values
 wpredPlot <- ggplot(wdata, aes(y = lrrtb, x = lsla.d))+
@@ -1556,10 +1790,6 @@ ypredPlot <- ggplot(ydata, aes(y = lrrtb, x = lsla.d))+
 
 ggpubr::ggarrange(wpredPlot, npredPlot, ypredPlot,
                   nrow = 1)
-
-```
-
-```{r}
 # Plot the relationship and add predicted values
 ggplot(rbind(ydata, ndata, wdata), aes(y = lrrtb, x = lsla.d, color = site))+
   geom_point() + 
@@ -1572,4 +1802,7 @@ sjPlot::tab_df(mse_focused_df)
 ```
 
 The above shows that focused model, where we used SLA as the only predictor of the plant change in biomass has a declining ability to predict change in biomass at the insecticide plot. 
+
+# Fungicide
+
 
