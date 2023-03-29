@@ -1462,7 +1462,7 @@ perc.herb $\times$ site  + perc.herb^2 $\times$ site +
 richness + abundance + $\Delta$SLA + 
 (Phylogenetic structure). 
 
-```{r}
+```{r, results='asis'}
 # Model explorations
 simple.sla <- gls(
   lrrtb ~ lsla.d*site + I(lsla.d^2)*site + richness + labu + lrrsla,
@@ -1816,7 +1816,7 @@ ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
 
 ```
 
-```{r}
+```{r, results='asis'}
 
 source('code/model_definitions.R')
 
@@ -1922,7 +1922,7 @@ ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
 
 ```
 
-```{r}
+```{r, results='asis'}
 
 source('code/model_definitions.R')
 
@@ -1930,8 +1930,8 @@ source('code/model_definitions.R')
 
 # Model selection.
 # 1. Full model (quadratic, and site interactions) vs no traits
-anova(no.traits, full.model) # full model is much better
-anova(full.model, full.model.noint)
+# anova(no.traits, full.model) # full model is much better
+# anova(full.model, full.model.noint)
 
 # interaction model is as good as the no interaction. Keep the model without the interaction
 
@@ -1984,12 +1984,95 @@ anova(full.model, full.model.noint)
 
 # WATER
 # Check quadratic
-anova(full.model.noint, just.water.quadratic.noint) # Model with just water content
+# anova(full.model.noint, just.water.quadratic.noint) # Model with just water content
 
 # Is the quadratic form necessary
-anova(just.water.quadratic.noint, just.water.linear.noint) # no difference but quadratic has lower AIC
+# anova(just.water.quadratic.noint, just.water.linear.noint) # no difference but quadratic has lower AIC
 
 # So the best model is the one without the traits!
 tab_model(just.water.quadratic.noint)
+
+```
+
+# Predators
+
+```{r}
+subsetVars <- c("c", "p")
+
+source('code/get_data_ready_for_the_sla_analyses.R')
+
+ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
+
+
+```
+
+```{r, results='asis'}
+
+source('code/model_definitions.R')
+
+# Are traits improving the null model
+
+# Model selection.
+# 1. Full model (quadratic, and site interactions) vs no traits
+# anova(no.traits, full.model)            # full model is better
+# anova(full.model, full.model.noint)     # No difference, so we can drop the interaction
+
+# interaction model is as good as the no interaction. Keep the model without the interaction
+
+# 2. Is the quadratic relationship significant
+# anova(full.model.noint, all.linear)            # Quadratic is a bit better
+# anova(full.model.noint, all.linear.noint)      # All linear no int is more efficient
+
+# Traits have nonlinear relationships with the delta biomass.
+
+# 3. REMOVE SLA
+
+# anova(full.model.noint, q.herb.q.water.noint) # withouth sla is slightly better (AIC)
+# anova(full.model.noint, q.herb.q.water)
+# anova(full.model.noint, q.herb.l.water.noint) # Linear water and quadratic herbivory works even better
+# anova(full.model.noint, q.herb.l.water) # interactions make it worse
+# anova(full.model.noint, l.herb.l.water.noint) # Full model still better
+# anova(q.herb.l.water.noint, l.herb.l.water.noint) # All linear? Slightly better
+# anova(full.model.noint, l.herb.l.water) 
+
+# All linear with interaction seems to work best, but the interaction is not improving the model so I will keep it out.
+
+# Including SLA did not mprove the model significantly
+# tab_model(l.herb.l.water.noint)
+# anova(no.traits, l.herb.l.water.noint)
+
+# But if we were to start first by remving perc.herbivory?
+# anova(full.model.noint, q.sla.q.water.noint) # Model without herbivory is not better
+# anova(full.model.noint, q.sla.q.water)       # Interaction makes it worse
+
+# anova(full.model.noint, q.sla.l.water.noint)   # Full model is still better
+# anova(full.model.noint, q.sla.l.water)         # Full model wins again
+# anova(full.model.noint, l.sla.l.water.noint)   # And again by AIC criterium
+# anova(full.model.noint, l.sla.l.water)         # And again
+
+# But if we were to start first by remving water.content?
+# anova(full.model.noint, q.sla.q.herb.noint) # Model with herbivory is much better
+# anova(full.model.noint, q.sla.q.herb)       # Full model is better
+# anova(q.sla.q.herb, q.sla.q.herb.noint)    # No interaction is better
+# anova(full.model.noint, q.sla.l.herb.noint)   # Full model is still better
+# anova(full.model.noint, q.sla.l.herb)         # Full model wins again
+# anova(full.model.noint, l.sla.l.herb.noint)   # And again by AIC criterium
+# anova(full.model.noint, l.sla.l.herb)         # And again
+
+# The above suggests that models without hebivory and sla do better job. 
+# Water content is again the key trait that helps predict the change in biomass in response to the treatment.
+
+# WATER
+# Check quadratic
+# anova(l.herb.l.water.noint, just.water.quadratic.noint) 
+# Model with just water content is worse than that without herbivores
+
+# Is the quadratic form necessary
+# anova(l.herb.l.water.noint, just.water.linear.noint) # Herbivory is an important trait 
+# anova(l.herb.l.water.noint, just.herb.linear.noint) # Water is an important trait, both should stay in the model
+
+
+# So the best model is the one without the traits!
+tab_model(l.herb.l.water.noint)
 
 ```

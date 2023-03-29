@@ -6,7 +6,12 @@ modelDefinitions <-  function () {
   no.traits <- gls(
     lrrtb ~ richness + labu + lrrsla + site,
     data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-    method = "ML"
+    method = "ML",
+    correlation = corMartins(2.718282, 
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
   )
   
   # FULL MODEL
