@@ -1,3 +1,5 @@
+moddata <- deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label)
+
 modelDefinitions <-  function () {
   
   # Runs all of model definitions
@@ -5,38 +7,38 @@ modelDefinitions <-  function () {
   # NO TRAITS
   no.traits <- gls(
     lrrtb ~ richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML",
-    correlation = corMartins(2.718282, 
-                             phy = myTree.rand.poly,
-                             form = ~unified_names,
-                             fixed = T),
-    na.action = na.omit
+    # correlation = corMartins(2.718282, 
+    #                          phy = myTree.rand.poly,
+    #                          form = ~unified_names,
+    #                          fixed = T),
+    # na.action = na.omit
   )
   
   # FULL MODEL
   full.model <- gls(
     lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+I(water.cont^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = ),
     method = "ML"
   )
   
   # FULL MODEL
   full.model.noint <- gls(
     lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) + perc.herb + I(perc.herb^2) + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   all.linear <- gls(
     lrrtb ~ lsla.d*site + water.cont*site + perc.herb*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   all.linear.noint <- gls(
     lrrtb ~ lsla.d+water.cont+perc.herb+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -45,75 +47,75 @@ modelDefinitions <-  function () {
   ## SLA
   just.sla.linear.noint <- gls(
     lrrtb ~ lsla.d + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.sla.linear <- gls(
     lrrtb ~ lsla.d*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.sla.quadratic.noint <- gls(
     lrrtb ~ lsla.d + I(lsla.d^2) + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.sla.quadratic <- gls(
     lrrtb ~ lsla.d*site + I(lsla.d^2)*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   ## WATER
   just.water.linear.noint <- gls(
     lrrtb ~ water.cont + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.water.linear <- gls(
     lrrtb ~ water.cont*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.water.quadratic.noint <- gls(
     lrrtb ~ water.cont + I(water.cont^2) + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.water.quadratic <- gls(
     lrrtb ~ water.cont*site + I(water.cont^2)*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   ## HERBIVORY
   just.herb.linear.noint <- gls(
     lrrtb ~ perc.herb + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.herb.linear <- gls(
     lrrtb ~ perc.herb*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.herb.quadratic.noint <- gls(
     lrrtb ~ perc.herb + I(perc.herb^2) + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   just.herb.quadratic <- gls(
     lrrtb ~ perc.herb*site + I(perc.herb^2)*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -123,25 +125,25 @@ modelDefinitions <-  function () {
   # quadratic SLA, HERB -------------------
   q.sla.q.herb <- gls(
     lrrtb ~ lsla.d*site+I(lsla.d^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic SLA, linear HERB
   q.sla.l.herb <- gls(
     lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+perc.herb*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, quadratic HERB
   l.sla.q.herb <- gls(
     lrrtb ~ lsla.d*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, linear HERB
   l.sla.l.herb <- gls(
     lrrtb ~ lsla.d*site+perc.herb*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -149,25 +151,25 @@ modelDefinitions <-  function () {
   # quadratic SLA, HERB 
   q.sla.q.herb.noint <- gls(
     lrrtb ~ lsla.d+I(lsla.d^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic SLA, linear HERB
   q.sla.l.herb.noint <- gls(
     lrrtb ~ lsla.d+ I(lsla.d^2)+perc.herb+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, quadratic HERB
   l.sla.q.herb.noint <- gls(
     lrrtb ~ lsla.d+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, linear HERB
   l.sla.l.herb.noint <- gls(
     lrrtb ~ lsla.d+perc.herb+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -175,25 +177,25 @@ modelDefinitions <-  function () {
   # quadratic HERB, WATER----------------------
   q.herb.q.water <- gls(
     lrrtb ~ water.cont*site+I(water.cont^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic HERB, linear WATER
   q.herb.l.water <- gls(
     lrrtb ~ water.cont*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear HERB, quadratic WATER
   l.herb.q.water <- gls(
     lrrtb ~ water.cont*site+I(water.cont^2)*site+perc.herb*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear HERB, linear WATER
   l.herb.l.water <- gls(
     lrrtb ~ water.cont*site+perc.herb*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -201,25 +203,25 @@ modelDefinitions <-  function () {
   # quadratic HERB, WATER
   q.herb.q.water.noint <- gls(
     lrrtb ~ water.cont+I(water.cont^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic HERB, linear WATER
   q.herb.l.water.noint <- gls(
     lrrtb ~ water.cont+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear HERB, quadratic WATER
   l.herb.q.water.noint <- gls(
     lrrtb ~ water.cont+I(water.cont^2)+perc.herb+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear HERB, linear WATER
   l.herb.l.water.noint <- gls(
     lrrtb ~ water.cont+perc.herb+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -229,50 +231,50 @@ modelDefinitions <-  function () {
   # Interaction
   q.sla.q.water <- gls(
     lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+I(water.cont^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic SLA, linear WATER
   q.sla.l.water <- gls(
     lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, quadratic WATER
   l.sla.q.water <- gls(
     lrrtb ~ lsla.d*site+water.cont*site+I(water.cont^2)*site+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, linear WATER
   l.sla.l.water <- gls(
     lrrtb ~ lsla.d*site + water.cont*site + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
   # NO Interaction
   q.sla.q.water.noint <- gls(
     lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+I(water.cont^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # quadratic SLA, linear WATER
   q.sla.l.water.noint <- gls(
     lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, quadratic WATER
   l.sla.q.water.noint <- gls(
     lrrtb ~ lsla.d+water.cont+I(water.cont^2)+richness+labu+lrrsla+site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   # linear SLA, linear WATER
   l.sla.l.water.noint <- gls(
     lrrtb ~ lsla.d + water.cont + richness + labu + lrrsla + site,
-    data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
+    data = moddata,
     method = "ML"
   )
   
@@ -335,46 +337,3 @@ modelDefinitions <-  function () {
 }
 
 attach(modelDefinitions())
-
-
-
-
-# 
-# 
-# 
-# all.linear <- gls(
-#   lrrtb ~ lsla.d*site + water.cont*site + perc.herb*site + richness + labu + lrrsla + site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 
-# all.linear.noint <- gls(
-#   lrrtb ~ lsla.d+water.cont+perc.herb+richness+labu+lrrsla+site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 
-# all.quad.sla <- gls(
-#   lrrtb~lsla.d*site+I(lsla.d^2)*site+richness+labu+lrrsla+site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 
-# all.quad.sla.noint <- gls(
-#   lrrtb~lsla.d*site+I(lsla.d^2)+richness+labu+lrrsla+site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 
-# all.quad.water <- gls(
-#   lrrtb~lsla.d*site+I(lsla.d^2)*site+richness+labu+lrrsla+site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 
-# all.quad.water.noint <- gls(
-#   lrrtb~lsla.d*site+I(lsla.d^2)+richness+labu+lrrsla+site,
-#   data = deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label),
-#   method = "ML"
-# )
-# 

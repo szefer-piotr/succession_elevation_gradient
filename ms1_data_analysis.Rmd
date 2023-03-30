@@ -27,6 +27,7 @@ Figure 1. Median, 1st, second quadrilles, 1.5 IRQ distance and outliers in bioma
 
 library(ggplot2)
 library(dplyr)
+library(sjPlot)
 
 elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
                    RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
@@ -1357,103 +1358,81 @@ Explore that visually
 
 #### Insecticide 
 
-##### Change in Biomass: log-respose ratio of a species' biomass
-
 ```{r}
 
 # Get the delta data ready for th e given subset vars (comparison)
 subsetVars <- c("c", "i")
 
-# Create data-set for a given treatment
-deltaData <- data.frame()
+source('code/get_data_ready_for_the_sla_analyses.R')
 
-# Change total bio variable into numeric
-lgsData$tot_bio <- as.numeric(lgsData$tot_bio)
+ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
 
-# Loop through each species in each garden and site and calculate their deltaBio
-for (st in unique(lgsData$site)){
-  
-  for (gard in unique(lgsData$garden)){
-    
-    stGardDat <- lgsData %>%
-      filter(site == st,
-             garden == gard)
-    
-    
-    if (dim(stGardDat)[1] == 0){
-      # If subset is empty skip to another one
-      next
-    }
-    
-    if (length(unique(stGardDat$treatment)) < 2){
-      # If there is species in only one treatment skip to another one
-      next
-    }
-    
-    specInCtr <- unique(stGardDat[stGardDat$treatment == subsetVars[1], ]$unified_names)
-    specInTrt <- unique(stGardDat[stGardDat$treatment == subsetVars[2], ]$unified_names)
-    specInBoth <- specInCtr[specInCtr %in% specInTrt]
-    
-    cDat <- stGardDat %>%
-      filter(unified_names %in% specInBoth,
-             treatment == subsetVars[1]) %>%
-      arrange(unified_names)
-    tDat <- stGardDat %>%
-      filter(unified_names %in% specInBoth,
-             treatment == subsetVars[2]) %>%
-      arrange(unified_names)
-    
-    # Calculate LRR for biomass and SLA change
-    
-    cDat$comparison <- subsetVars[2]
-    
-    if (subsetVars[2] == "h"){
-      cDat$lrrtb <- log(tDat$tot_bio/cDat$tot_bio)
-      cDat$lrrsla <- log(tDat$sla.d.m2kg1/cDat$sla.d.m2kg1)
-    } else{
-      cDat$lrrtb <- log(cDat$tot_bio/tDat$tot_bio)
-      cDat$lrrsla <- log(cDat$sla.d.m2kg1/tDat$sla.d.m2kg1)
-    }
-    
-    deltaData <- rbind(deltaData, cDat)
-    
-  }
-}
-
-
-# Log transform estimated leaf area
-deltaData <- deltaData %>%
-          mutate(lest.leaf.area = log(est.leaf.area))%>%
-  filter(!is.infinite(lest.leaf.area))
+# # Create data-set for a given treatment
+# deltaData <- data.frame()
+# 
+# # Change total bio variable into numeric
+# lgsData$tot_bio <- as.numeric(lgsData$tot_bio)
+# 
+# # Loop through each species in each garden and site and calculate their deltaBio
+# for (st in unique(lgsData$site)){
+#   
+#   for (gard in unique(lgsData$garden)){
+#     
+#     stGardDat <- lgsData %>%
+#       filter(site == st,
+#              garden == gard)
+#     
+#     
+#     if (dim(stGardDat)[1] == 0){
+#       # If subset is empty skip to another one
+#       next
+#     }
+#     
+#     if (length(unique(stGardDat$treatment)) < 2){
+#       # If there is species in only one treatment skip to another one
+#       next
+#     }
+#     
+#     specInCtr <- unique(stGardDat[stGardDat$treatment == subsetVars[1], ]$unified_names)
+#     specInTrt <- unique(stGardDat[stGardDat$treatment == subsetVars[2], ]$unified_names)
+#     specInBoth <- specInCtr[specInCtr %in% specInTrt]
+#     
+#     cDat <- stGardDat %>%
+#       filter(unified_names %in% specInBoth,
+#              treatment == subsetVars[1]) %>%
+#       arrange(unified_names)
+#     tDat <- stGardDat %>%
+#       filter(unified_names %in% specInBoth,
+#              treatment == subsetVars[2]) %>%
+#       arrange(unified_names)
+#     
+#     # Calculate LRR for biomass and SLA change
+#     
+#     cDat$comparison <- subsetVars[2]
+#     
+#     if (subsetVars[2] == "h"){
+#       cDat$lrrtb <- log(tDat$tot_bio/cDat$tot_bio)
+#       cDat$lrrsla <- log(tDat$sla.d.m2kg1/cDat$sla.d.m2kg1)
+#     } else{
+#       cDat$lrrtb <- log(cDat$tot_bio/tDat$tot_bio)
+#       cDat$lrrsla <- log(cDat$sla.d.m2kg1/tDat$sla.d.m2kg1)
+#     }
+#     
+#     deltaData <- rbind(deltaData, cDat)
+#     
+#   }
+# }
+# 
+# 
+# # Log transform estimated leaf area
+# deltaData <- deltaData %>%
+#           mutate(lest.leaf.area = log(est.leaf.area))%>%
+#   filter(!is.infinite(lest.leaf.area))
 
 ```
 
 Below I explore nonlinear relationships of the biomass log-ratios with species traits. Nonlinear relationships are introduced to allow for optimum trait values.
 
-```{r}
-
-# Log-response ratios of total biomass vs of sla
-
-# DeltaBiomass vs SLA at each site
-slaPlot <- ggplot(deltaData, aes(x = lsla.d, y = lrrtb, color = site)) +
-  geom_point()+
-  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
-
-# There might be some effect of site.
-# DeltaBiomass vs SLA at each site
-wcPlot <- ggplot(deltaData, aes(x = water.cont, y = lrrtb, color = site)) +
-  geom_point()+
-  geom_smooth(method = "lm", formula = y ~ x + I(x^2))
-# Seems like the effect is not very strong either
-
-herbPlot <- ggplot(deltaData, aes(x = perc.herb, y = lrrtb, color = site)) +
-  geom_point()+
-  geom_smooth(method = "lm", formula = y ~ x + I(x^2)) + 
-  scale_x_continuous(trans = 'log2')
-
-ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
-
-```
 It seems that in some cases the nonlinear relationship may be important. Generally water content looks linear for each elevation. We will include this and build also a model that models log-ratio biomass vs water content as a linear relationship. We arrive to the final definition of the full model.
 
 $\Delta$Biomass ~ SLA $\times$ site + SLA^2 $\times$ site + 
@@ -1463,6 +1442,7 @@ richness + abundance + $\Delta$SLA +
 (Phylogenetic structure). 
 
 ```{r, results='asis'}
+
 # Model explorations
 simple.sla <- gls(
   lrrtb ~ lsla.d*site + I(lsla.d^2)*site + richness + labu + lrrsla,
@@ -1563,7 +1543,6 @@ full.sla.linear.noint.nosite <- gls(
 ```
 
 Table. Results of the selected model for the deltaBio.
-
 ```{r}
 sjPlot::tab_model(full.sla.linear.noint.nosite)
 ```
@@ -1648,9 +1627,9 @@ However, when we analyse the data separately for each elevation we are getting a
 # Only the predictive power of SLA, water content and percentage herbivory on deltaBio
 
 # Wanang ----
-wdata <- deltaData %>% 
-  filter(unified_names %in% myTree.rand.poly$tip.label) %>%
-  filter(site == "wanang")
+# wdata <- deltaData %>% 
+#   filter(unified_names %in% myTree.rand.poly$tip.label) %>%
+#   filter(site == "wanang")
 
 # dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d,
 #                      data = wdata,
@@ -1660,37 +1639,37 @@ wdata <- deltaData %>%
 #                                               form = ~unified_names,
 #                                               fixed = T),
 #                      na.action = na.omit)
-dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
-                     data = wdata,
-                     method = "ML",
-                     correlation = corMartins(2.718282, 
-                                              phy = myTree.rand.poly, 
-                                              form = ~unified_names,
-                                              fixed = T),
-                     na.action = na.omit)
+# dd.gls.focsed.w <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
+#                      data = wdata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282, 
+#                                               phy = myTree.rand.poly, 
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
 
 
 # Model results
 
 
 # Predict values
-pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.w, wdata, 
-                                       se.fit = T)
-wdata <- wdata %>%
-  mutate(preds = pred.vals$fit,
-         se.preds = pred.vals$se.fit,
-         se.upr = preds + se.preds,
-         se.lwr = preds - se.preds)
-
-# print the MSE
-mse_focused_df <- data.frame(mse = with(wdata, mean((lrrtb - preds))^2),
-                             treatment = "Insecticide", site = "Wanang")
+# pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.w, wdata, 
+#                                        se.fit = T)
+# wdata <- wdata %>%
+#   mutate(preds = pred.vals$fit,
+#          se.preds = pred.vals$se.fit,
+#          se.upr = preds + se.preds,
+#          se.lwr = preds - se.preds)
+# 
+# # print the MSE
+# mse_focused_df <- data.frame(mse = with(wdata, mean((lrrtb - preds))^2),
+#                              treatment = "Insecticide", site = "Wanang")
 
 
 # Numba ----
-ndata <- deltaData %>% 
-  filter(unified_names %in% myTree.rand.poly$tip.label) %>%
-  filter(site == "numba")
+# ndata <- deltaData %>% 
+#   filter(unified_names %in% myTree.rand.poly$tip.label) %>%
+#   filter(site == "numba")
 
 # dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d,
 #                      data = ndata,
@@ -1700,33 +1679,33 @@ ndata <- deltaData %>%
 #                                               form = ~unified_names,
 #                                               fixed = T),
 #                      na.action = na.omit)
-dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
-                     data = ndata,
-                     method = "ML",
-                     correlation = corMartins(2.718282, 
-                                              phy = myTree.rand.poly, 
-                                              form = ~unified_names,
-                                              fixed = T),
-                     na.action = na.omit)
+# dd.gls.focsed.n <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
+#                      data = ndata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282, 
+#                                               phy = myTree.rand.poly, 
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
 
 # Predict values
-pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.n, ndata, 
-                                       se.fit = T)
-ndata <- ndata %>%
-  mutate(preds = pred.vals$fit,
-         se.preds = pred.vals$se.fit,
-         se.upr = preds + se.preds,
-         se.lwr = preds - se.preds)
-
-# print the MSE
-mse_focused_df <- rbind(mse_focused_df,  
-                        data.frame(mse = with(ndata, mean((lrrtb - preds))^2),
-                                   treatment = "Insecticide", site = "Numba"))
+# pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.n, ndata, 
+#                                        se.fit = T)
+# ndata <- ndata %>%
+#   mutate(preds = pred.vals$fit,
+#          se.preds = pred.vals$se.fit,
+#          se.upr = preds + se.preds,
+#          se.lwr = preds - se.preds)
+# 
+# # print the MSE
+# mse_focused_df <- rbind(mse_focused_df,  
+#                         data.frame(mse = with(ndata, mean((lrrtb - preds))^2),
+#                                    treatment = "Insecticide", site = "Numba"))
 
 # Yawan ----
-ydata <- deltaData %>% 
-  filter(unified_names %in% myTree.rand.poly$tip.label) %>%
-  filter(site == "yawan")
+# ydata <- deltaData %>% 
+#   filter(unified_names %in% myTree.rand.poly$tip.label) %>%
+#   filter(site == "yawan")
 
 # The model
 # dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d,
@@ -1738,73 +1717,73 @@ ydata <- deltaData %>%
 #                                               fixed = T),
 #                      na.action = na.omit)
 
-dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
-                     data = ydata,
-                     method = "ML",
-                     correlation = corMartins(2.718282,
-                                              phy = myTree.rand.poly,
-                                              form = ~unified_names,
-                                              fixed = T),
-                     na.action = na.omit)
+# dd.gls.focsed.y <- nlme::gls(lrrtb ~ lsla.d + water.cont + perc.herb + richness + labu + lrrsla,
+#                      data = ydata,
+#                      method = "ML",
+#                      correlation = corMartins(2.718282,
+#                                               phy = myTree.rand.poly,
+#                                               form = ~unified_names,
+#                                               fixed = T),
+#                      na.action = na.omit)
 
 # Predict values
-pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.y, ydata, 
-                                       se.fit = T)
-ydata <- ydata %>%
-  mutate(preds = pred.vals$fit,
-         se.preds = pred.vals$se.fit,
-         se.upr = preds + se.preds,
-         se.lwr = preds - se.preds)
-
-# print the MSE
-mse_focused_df <- rbind(mse_focused_df,  
-                        data.frame(mse = with(ydata, mean((lrrtb - preds))^2),
-                                   treatment = "Insecticide", site = "Yawan"))
-
-library(sjPlot)
-
-tab_model(dd.gls.focsed.w, dd.gls.focsed.n, dd.gls.focsed.y)
+# pred.vals <- AICcmodavg::predictSE.gls(dd.gls.focsed.y, ydata, 
+#                                        se.fit = T)
+# ydata <- ydata %>%
+#   mutate(preds = pred.vals$fit,
+#          se.preds = pred.vals$se.fit,
+#          se.upr = preds + se.preds,
+#          se.lwr = preds - se.preds)
+# 
+# # print the MSE
+# mse_focused_df <- rbind(mse_focused_df,  
+#                         data.frame(mse = with(ydata, mean((lrrtb - preds))^2),
+#                                    treatment = "Insecticide", site = "Yawan"))
 
 
-# fig.cap = "Empirical and predicted values of a simple model of biomass change vs logarithm of SLA for each studied sites."}
 
-# Plot the relationship and add predicted values
-wpredPlot <- ggplot(wdata, aes(y = lrrtb, x = lsla.d))+
-  geom_point() +
-  geom_line(data = wdata, aes(x = lsla.d, y = preds), lwd = 1,
-            lty = 2)+
-  # geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) +
-  ggtitle("Wanang 200 m a.s.l.")
-
-npredPlot <- ggplot(ndata, aes(y = lrrtb, x = lsla.d))+
-  geom_point() +
-  geom_line(data = ndata, aes(x = lsla.d, y = preds), 
-            lwd = 1, lty = 2)+
-  # geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) + 
-  ggtitle("Numba 750 m a.s.l.")
-
-ypredPlot <- ggplot(ydata, aes(y = lrrtb, x = lsla.d))+
-  geom_point() +
-  geom_line(data = ydata, aes(x = lsla.d, y = preds), lwd = 1)+
-  geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) + 
-  ggtitle("Yawan 1900 m a.s.l.")
-
-ggpubr::ggarrange(wpredPlot, npredPlot, ypredPlot,
-                  nrow = 1)
-# Plot the relationship and add predicted values
-ggplot(rbind(ydata, ndata, wdata), aes(y = lrrtb, x = lsla.d, color = site))+
-  geom_point() + 
-  geom_line(data = rbind(ydata, ndata, wdata), 
-            aes(x = lsla.d, y = preds), lwd = 1)+
-  geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15)
-
-sjPlot::tab_df(mse_focused_df)
+# tab_model(dd.gls.focsed.w, dd.gls.focsed.n, dd.gls.focsed.y)
+# 
+# 
+# # fig.cap = "Empirical and predicted values of a simple model of biomass change vs logarithm of SLA for each studied sites."}
+# 
+# # Plot the relationship and add predicted values
+# wpredPlot <- ggplot(wdata, aes(y = lrrtb, x = lsla.d))+
+#   geom_point() +
+#   geom_line(data = wdata, aes(x = lsla.d, y = preds), lwd = 1,
+#             lty = 2)+
+#   # geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) +
+#   ggtitle("Wanang 200 m a.s.l.")
+# 
+# npredPlot <- ggplot(ndata, aes(y = lrrtb, x = lsla.d))+
+#   geom_point() +
+#   geom_line(data = ndata, aes(x = lsla.d, y = preds), 
+#             lwd = 1, lty = 2)+
+#   # geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) + 
+#   ggtitle("Numba 750 m a.s.l.")
+# 
+# ypredPlot <- ggplot(ydata, aes(y = lrrtb, x = lsla.d))+
+#   geom_point() +
+#   geom_line(data = ydata, aes(x = lsla.d, y = preds), lwd = 1)+
+#   geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15) + 
+#   ggtitle("Yawan 1900 m a.s.l.")
+# 
+# ggpubr::ggarrange(wpredPlot, npredPlot, ypredPlot,
+#                   nrow = 1)
+# # Plot the relationship and add predicted values
+# ggplot(rbind(ydata, ndata, wdata), aes(y = lrrtb, x = lsla.d, color = site))+
+#   geom_point() + 
+#   geom_line(data = rbind(ydata, ndata, wdata), 
+#             aes(x = lsla.d, y = preds), lwd = 1)+
+#   geom_ribbon(aes(ymin=se.lwr, ymax=se.upr), alpha = .15)
+# 
+# sjPlot::tab_df(mse_focused_df)
 
 ```
 
 The above shows that focused model, where we used SLA as the only predictor of the plant change in biomass has a declining ability to predict change in biomass at the insecticide plot. 
 
-# Fungicide
+#### Fungicide
 
 ```{r}
 subsetVars <- c("c", "f")
@@ -1910,7 +1889,7 @@ tab_model(no.traits)
 
 ```
 
-# Additional herbivores
+#### Additional herbivores
 
 ```{r}
 subsetVars <- c("c", "h")
@@ -1994,7 +1973,7 @@ tab_model(just.water.quadratic.noint)
 
 ```
 
-# Predators
+#### Predators
 
 ```{r}
 subsetVars <- c("c", "p")
@@ -2008,71 +1987,108 @@ ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
 
 ```{r, results='asis'}
 
-source('code/model_definitions.R')
+source('code/model_definitions_pgls.R')
 
 # Are traits improving the null model
 
 # Model selection.
+
 # 1. Full model (quadratic, and site interactions) vs no traits
-# anova(no.traits, full.model)            # full model is better
-# anova(full.model, full.model.noint)     # No difference, so we can drop the interaction
+anova(no.traits, full.model)            # full model is better
 
-# interaction model is as good as the no interaction. Keep the model without the interaction
 
-# 2. Is the quadratic relationship significant
-# anova(full.model.noint, all.linear)            # Quadratic is a bit better
-# anova(full.model.noint, all.linear.noint)      # All linear no int is more efficient
+# 2. Removal of individual traits
 
-# Traits have nonlinear relationships with the delta biomass.
+# 2.1 Remove SLA
+anova(full.model, q.herb.q.water) # withouth sla is slightly better (AIC)
 
-# 3. REMOVE SLA
+# 2.2 Remove herbivory
+anova(full.model, q.sla.q.water.noint) # Model without herbivory is not better
 
-# anova(full.model.noint, q.herb.q.water.noint) # withouth sla is slightly better (AIC)
-# anova(full.model.noint, q.herb.q.water)
-# anova(full.model.noint, q.herb.l.water.noint) # Linear water and quadratic herbivory works even better
-# anova(full.model.noint, q.herb.l.water) # interactions make it worse
-# anova(full.model.noint, l.herb.l.water.noint) # Full model still better
-# anova(q.herb.l.water.noint, l.herb.l.water.noint) # All linear? Slightly better
-# anova(full.model.noint, l.herb.l.water) 
+# 2.3 Remove water content?
+anova(full.model, q.sla.q.herb) # Model with herbivory is much better
 
-# All linear with interaction seems to work best, but the interaction is not improving the model so I will keep it out.
+# 3. Reduce model even further - 1 trait models.
+anova(full.model, just.sla.quadratic)
+anova(full.model, just.herb.quadratic)
+anova(full.model, just.water.quadratic)
 
-# Including SLA did not mprove the model significantly
-# tab_model(l.herb.l.water.noint)
-# anova(no.traits, l.herb.l.water.noint)
+# Seems like they all stay!
 
-# But if we were to start first by remving perc.herbivory?
-# anova(full.model.noint, q.sla.q.water.noint) # Model without herbivory is not better
-# anova(full.model.noint, q.sla.q.water)       # Interaction makes it worse
+# 4. Quadratic vs linear
+anova(full.model, all.linear) # Full model still better
 
-# anova(full.model.noint, q.sla.l.water.noint)   # Full model is still better
-# anova(full.model.noint, q.sla.l.water)         # Full model wins again
-# anova(full.model.noint, l.sla.l.water.noint)   # And again by AIC criterium
-# anova(full.model.noint, l.sla.l.water)         # And again
-
-# But if we were to start first by remving water.content?
-# anova(full.model.noint, q.sla.q.herb.noint) # Model with herbivory is much better
-# anova(full.model.noint, q.sla.q.herb)       # Full model is better
-# anova(q.sla.q.herb, q.sla.q.herb.noint)    # No interaction is better
-# anova(full.model.noint, q.sla.l.herb.noint)   # Full model is still better
-# anova(full.model.noint, q.sla.l.herb)         # Full model wins again
-# anova(full.model.noint, l.sla.l.herb.noint)   # And again by AIC criterium
-# anova(full.model.noint, l.sla.l.herb)         # And again
-
-# The above suggests that models without hebivory and sla do better job. 
-# Water content is again the key trait that helps predict the change in biomass in response to the treatment.
-
-# WATER
-# Check quadratic
-# anova(l.herb.l.water.noint, just.water.quadratic.noint) 
-# Model with just water content is worse than that without herbivores
-
-# Is the quadratic form necessary
-# anova(l.herb.l.water.noint, just.water.linear.noint) # Herbivory is an important trait 
-# anova(l.herb.l.water.noint, just.herb.linear.noint) # Water is an important trait, both should stay in the model
-
+# 5. Interaction reduction
+anova(full.model, full.model.noint)
 
 # So the best model is the one without the traits!
-tab_model(l.herb.l.water.noint)
+tab_model(full.model)
+
+
+
+
+# Predictions and vizualizations!
+traitnm <- "lsla.d"
+predictAndVisualize <- function (deltaData, traitnm, n=100) {
+  other_traits <- names(deltaData)[!(names(deltaData) %in% c(traitnm, 
+                                                             "site", 
+                                                             "garden", 
+                                                             "treatment", 
+                                                             "unified_names",
+                                                             "pg.cat",
+                                                             "comparison"))]
+  
+  focal.column = seq(from = min(deltaData[, traitnm], na.rm = T),
+                     to = max(deltaData[, traitnm], na.rm = T), 
+                     length = n)
+  other.vals <- t(apply(deltaData[, other_traits], 2, mean, na.rm = T))
+  preddata <- cbind(focal.column,
+        do.call("rbind", replicate(n, other.vals, simplify = FALSE)))
+  colnames(preddata)[1] <- traitnm
+  preddata <- rbind(preddata, preddata, preddata)
+  preddata$site <- rep(c("wanang", "numba", "yawan"), each = n)
+  
+  # predvals <- AICcmodavg::predictSE.gls(full.sla.linear.noint.nosite, newdata = preddata,
+  #                   newdtype = 'response')
+  # preddata$predvals <- predvals$fit
+  # preddata$predse <- predvals$se.fit
+  
+}
+
+
+
+preddata <- data.frame(lsla.d = seq(from = min(deltaData$lsla.d, na.rm = T), 
+                                  to = max(deltaData$lsla.d, na.rm = T), 
+                                  length = 100),
+                       water.cont = mean(deltaData$water.cont, na.rm = T), 
+                       perc.herb= mean(deltaData$perc.herb, na.rm = T), 
+                       richness= mean(deltaData$richness, na.rm = T), 
+                       labu= mean(deltaData$labu, na.rm = T),
+                       lrrsla= mean(deltaData$lrrsla, na.rm = T))
+
+preddatalrrsla <- data.frame(lsla.d = mean(deltaData$lsla.d, na.rm = T),
+                       water.cont = mean(deltaData$water.cont, na.rm = T), 
+                       perc.herb= mean(deltaData$perc.herb, na.rm = T), 
+                       richness= mean(deltaData$richness, na.rm = T), 
+                       labu= mean(deltaData$labu, na.rm = T),
+                       lrrsla=  seq(from = min(deltaData$lrrsla, na.rm = T), 
+                                  to = max(deltaData$lrrsla, na.rm = T), 
+                                  length = 100))
+
+visData <- deltaData %>% filter(unified_names %in% myTree.rand.poly$tip.label)
+
+predvals <- AICcmodavg::predictSE.gls(full.sla.linear.noint.nosite, newdata = preddata,
+                    newdtype = 'response')
+preddata$predvals <- predvals$fit
+preddata$predse <- predvals$se.fit
+
+predvalslrrsla <- AICcmodavg::predictSE.gls(full.sla.linear.noint.nosite, newdata = preddatalrrsla,
+                    newdtype = 'response')
+
+preddatalrrsla$predvals <- predvalslrrsla$fit
+preddatalrrsla$predse <- predvalslrrsla$se.fit
+
+
+
 
 ```
