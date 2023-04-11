@@ -6,7 +6,7 @@ modelDefinitions <-  function () {
   
   # NO TRAITS
   no.traits <- gls(
-    lrrtb ~ richness + labu + lrrsla + site,
+    lrrtb ~ richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -18,7 +18,7 @@ modelDefinitions <-  function () {
   
   # FULL MODEL
   full.model <- gls(
-    lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+I(water.cont^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+ I(lsla.d^2)*fsite+water.cont*fsite+I(water.cont^2)*fsite+perc.herb*fsite+I(perc.herb^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -30,7 +30,7 @@ modelDefinitions <-  function () {
   
   # FULL MODEL
   full.model.noint <- gls(
-    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) + perc.herb + I(perc.herb^2) + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) + perc.herb + I(perc.herb^2) + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -41,7 +41,7 @@ modelDefinitions <-  function () {
   )
   
   all.linear <- gls(
-    lrrtb ~ lsla.d*site + water.cont*site + perc.herb*site + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d*fsite + water.cont*fsite + perc.herb*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -52,7 +52,7 @@ modelDefinitions <-  function () {
   )
   
   all.linear.noint <- gls(
-    lrrtb ~ lsla.d+water.cont+perc.herb+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+water.cont+perc.herb+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -66,7 +66,7 @@ modelDefinitions <-  function () {
   
   ## SLA
   just.sla.linear.noint <- gls(
-    lrrtb ~ lsla.d + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -77,7 +77,7 @@ modelDefinitions <-  function () {
   )
   
   just.sla.linear <- gls(
-    lrrtb ~ lsla.d*site + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -88,7 +88,7 @@ modelDefinitions <-  function () {
   )
   
   just.sla.quadratic.noint <- gls(
-    lrrtb ~ lsla.d + I(lsla.d^2) + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d + I(lsla.d^2) + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -99,7 +99,7 @@ modelDefinitions <-  function () {
   )
   
   just.sla.quadratic <- gls(
-    lrrtb ~ lsla.d*site + I(lsla.d^2)*site + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d*fsite + I(lsla.d^2)*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -111,7 +111,7 @@ modelDefinitions <-  function () {
   
   ## WATER
   just.water.linear.noint <- gls(
-    lrrtb ~ water.cont + richness + labu + lrrsla + site,
+    lrrtb ~ water.cont + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -122,7 +122,7 @@ modelDefinitions <-  function () {
   )
   
   just.water.linear <- gls(
-    lrrtb ~ water.cont*site + richness + labu + lrrsla + site,
+    lrrtb ~ water.cont*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -133,7 +133,7 @@ modelDefinitions <-  function () {
   )
   
   just.water.quadratic.noint <- gls(
-    lrrtb ~ water.cont + I(water.cont^2) + richness + labu + lrrsla + site,
+    lrrtb ~ water.cont + I(water.cont^2) + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -144,7 +144,7 @@ modelDefinitions <-  function () {
   )
   
   just.water.quadratic <- gls(
-    lrrtb ~ water.cont*site + I(water.cont^2)*site + richness + labu + lrrsla + site,
+    lrrtb ~ water.cont*fsite + I(water.cont^2)*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -156,7 +156,7 @@ modelDefinitions <-  function () {
   
   ## HERBIVORY
   just.herb.linear.noint <- gls(
-    lrrtb ~ perc.herb + richness + labu + lrrsla + site,
+    lrrtb ~ perc.herb + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -167,7 +167,7 @@ modelDefinitions <-  function () {
   )
   
   just.herb.linear <- gls(
-    lrrtb ~ perc.herb*site + richness + labu + lrrsla + site,
+    lrrtb ~ perc.herb*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -178,7 +178,7 @@ modelDefinitions <-  function () {
   )
   
   just.herb.quadratic.noint <- gls(
-    lrrtb ~ perc.herb + I(perc.herb^2) + richness + labu + lrrsla + site,
+    lrrtb ~ perc.herb + I(perc.herb^2) + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -189,7 +189,7 @@ modelDefinitions <-  function () {
   )
   
   just.herb.quadratic <- gls(
-    lrrtb ~ perc.herb*site + I(perc.herb^2)*site + richness + labu + lrrsla + site,
+    lrrtb ~ perc.herb*fsite + I(perc.herb^2)*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -204,7 +204,7 @@ modelDefinitions <-  function () {
   # Interaction
   # quadratic SLA, HERB -------------------
   q.sla.q.herb <- gls(
-    lrrtb ~ lsla.d*site+I(lsla.d^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+I(lsla.d^2)*fsite+perc.herb*fsite+I(perc.herb^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -215,7 +215,7 @@ modelDefinitions <-  function () {
   )
   # quadratic SLA, linear HERB
   q.sla.l.herb <- gls(
-    lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+perc.herb*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+ I(lsla.d^2)*fsite+perc.herb*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -226,7 +226,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, quadratic HERB
   l.sla.q.herb <- gls(
-    lrrtb ~ lsla.d*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+perc.herb*fsite+I(perc.herb^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",
     correlation = corMartins(2.718282,
@@ -237,7 +237,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, linear HERB
   l.sla.l.herb <- gls(
-    lrrtb ~ lsla.d*site+perc.herb*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+perc.herb*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                             
                                            phy = myTree.rand.poly,                              
@@ -249,7 +249,7 @@ modelDefinitions <-  function () {
   # No interaction
   # quadratic SLA, HERB 
   q.sla.q.herb.noint <- gls(
-    lrrtb ~ lsla.d+I(lsla.d^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+I(lsla.d^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                              
                                            phy = myTree.rand.poly,
@@ -259,7 +259,7 @@ modelDefinitions <-  function () {
   )
   # quadratic SLA, linear HERB
   q.sla.l.herb.noint <- gls(
-    lrrtb ~ lsla.d+ I(lsla.d^2)+perc.herb+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+ I(lsla.d^2)+perc.herb+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                              
                                            phy = myTree.rand.poly,  
@@ -269,7 +269,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, quadratic HERB
   l.sla.q.herb.noint <- gls(
-    lrrtb ~ lsla.d+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,               
                                            phy = myTree.rand.poly, 
@@ -279,7 +279,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, linear HERB
   l.sla.l.herb.noint <- gls(
-    lrrtb ~ lsla.d+perc.herb+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+perc.herb+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                      
                                            phy = myTree.rand.poly,   
@@ -291,7 +291,7 @@ modelDefinitions <-  function () {
   # Interaction
   # quadratic HERB, WATER----------------------
   q.herb.q.water <- gls(
-    lrrtb ~ water.cont*site+I(water.cont^2)*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont*fsite+I(water.cont^2)*fsite+perc.herb*fsite+I(perc.herb^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,           
                                            phy = myTree.rand.poly,    
@@ -301,7 +301,7 @@ modelDefinitions <-  function () {
   )
   # quadratic HERB, linear WATER
   q.herb.l.water <- gls(
-    lrrtb ~ water.cont*site+perc.herb*site+I(perc.herb^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont*fsite+perc.herb*fsite+I(perc.herb^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                    
                                            phy = myTree.rand.poly,      
@@ -311,7 +311,7 @@ modelDefinitions <-  function () {
   )
   # linear HERB, quadratic WATER
   l.herb.q.water <- gls(
-    lrrtb ~ water.cont*site+I(water.cont^2)*site+perc.herb*site+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont*fsite+I(water.cont^2)*fsite+perc.herb*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                    
                                            phy = myTree.rand.poly,      
@@ -321,7 +321,7 @@ modelDefinitions <-  function () {
   )
   # linear HERB, linear WATER
   l.herb.l.water <- gls(
-    lrrtb ~ water.cont*site+perc.herb*site+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont*fsite+perc.herb*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                    
                                            phy = myTree.rand.poly,      
@@ -333,7 +333,7 @@ modelDefinitions <-  function () {
   # NO Interaction
   # quadratic HERB, WATER
   q.herb.q.water.noint <- gls(
-    lrrtb ~ water.cont+I(water.cont^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont+I(water.cont^2)+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,             
                                            phy = myTree.rand.poly,  
@@ -343,7 +343,7 @@ modelDefinitions <-  function () {
   )
   # quadratic HERB, linear WATER
   q.herb.l.water.noint <- gls(
-    lrrtb ~ water.cont+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont+perc.herb+I(perc.herb^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,               
                                            phy = myTree.rand.poly, 
@@ -353,7 +353,7 @@ modelDefinitions <-  function () {
   )
   # linear HERB, quadratic WATER
   l.herb.q.water.noint <- gls(
-    lrrtb ~ water.cont+I(water.cont^2)+perc.herb+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont+I(water.cont^2)+perc.herb+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,            
                                            phy = myTree.rand.poly,  
@@ -363,7 +363,7 @@ modelDefinitions <-  function () {
   )
   # linear HERB, linear WATER
   l.herb.l.water.noint <- gls(
-    lrrtb ~ water.cont+perc.herb+richness+labu+lrrsla+site,
+    lrrtb ~ water.cont+perc.herb+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                  
                                            phy = myTree.rand.poly,   
@@ -377,7 +377,7 @@ modelDefinitions <-  function () {
   # quadratic SLA, WATER-----------------------------
   # Interaction
   q.sla.q.water <- gls(
-    lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+I(water.cont^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+ I(lsla.d^2)*fsite+water.cont*fsite+I(water.cont^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,              
                                            phy = myTree.rand.poly, 
@@ -387,7 +387,7 @@ modelDefinitions <-  function () {
   )
   # quadratic SLA, linear WATER
   q.sla.l.water <- gls(
-    lrrtb ~ lsla.d*site+ I(lsla.d^2)*site+water.cont*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+ I(lsla.d^2)*fsite+water.cont*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                    
                                            phy = myTree.rand.poly,    
@@ -397,7 +397,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, quadratic WATER
   l.sla.q.water <- gls(
-    lrrtb ~ lsla.d*site+water.cont*site+I(water.cont^2)*site+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d*fsite+water.cont*fsite+I(water.cont^2)*fsite+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                 
                                            phy = myTree.rand.poly,
@@ -407,7 +407,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, linear WATER
   l.sla.l.water <- gls(
-    lrrtb ~ lsla.d*site + water.cont*site + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d*fsite + water.cont*fsite + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                    
                                            phy = myTree.rand.poly,  
@@ -418,7 +418,7 @@ modelDefinitions <-  function () {
   
   # NO Interaction
   q.sla.q.water.noint <- gls(
-    lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+I(water.cont^2)+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+I(water.cont^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                   
                                            phy = myTree.rand.poly,     
@@ -428,7 +428,7 @@ modelDefinitions <-  function () {
   )
   # quadratic SLA, linear WATER
   q.sla.l.water.noint <- gls(
-    lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+ I(lsla.d^2)+water.cont+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                     
                                            phy = myTree.rand.poly,  
@@ -438,7 +438,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, quadratic WATER
   l.sla.q.water.noint <- gls(
-    lrrtb ~ lsla.d+water.cont+I(water.cont^2)+richness+labu+lrrsla+site,
+    lrrtb ~ lsla.d+water.cont+I(water.cont^2)+richness+labu+lrrsla+fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,              
                                            phy = myTree.rand.poly, 
@@ -448,7 +448,7 @@ modelDefinitions <-  function () {
   )
   # linear SLA, linear WATER
   l.sla.l.water.noint <- gls(
-    lrrtb ~ lsla.d + water.cont + richness + labu + lrrsla + site,
+    lrrtb ~ lsla.d + water.cont + richness + labu + lrrsla + fsite,
     data = moddata,
     method = "ML",correlation = corMartins(2.718282,                  
                                            phy = myTree.rand.poly, 

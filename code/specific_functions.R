@@ -57,7 +57,7 @@ getLogRatio <- function (dataset,
   
   for (gard in unique(dset$garden)){
     
-    print(gard)
+    # print(gard)
     
     # Dataset only for control plot
     based <- dset %>%
@@ -110,19 +110,19 @@ runTest <- function(lrdata, treatment_code = "f", label){
     testStat <- aovtrt$`F-value`
     testP <- aovtrt$`p-value`
     
-    print("Model runned")
+    # print("Model runned")
     
     # Tukey post-hoc
     
-    print("Stage1")
+    # print("Stage1")
     # emm <- emmeans(object = trtlm, 
     #                         specs = "site",
     #                adjust = "mvt")
     
-    print("Post hoc not runned")
+    # print("Post hoc not runned")
     
     zero.dif <- ifelse(summary(trtlm)$tTable[,4] > 0.05, "","*")
-    print("zero.dif assigned")
+    # print("zero.dif assigned")
     
     # mod_means <- multcomp::cld(object = emm,
     #                            Letters = letters)$.group

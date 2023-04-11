@@ -98,7 +98,10 @@ for (st in unique(lgsData$site)){
 ####--------------------------------------------------
 # 3. Log transform estimated leaf area
 deltaData <- deltaData %>%
-  mutate(lest.leaf.area = log(est.leaf.area))%>%
+  mutate(lest.leaf.area = log(est.leaf.area),
+         fsite = factor(site, 
+                        levels = c("wanang", "numba","yawan")),
+         perc.herb = c(scale(perc.herb)))%>%
   filter(!is.infinite(lest.leaf.area))
 
 # DeltaBiomass vs SLA at each site
