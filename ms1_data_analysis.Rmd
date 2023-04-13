@@ -1032,7 +1032,8 @@ names(dwbRichF) <- c("site", "garden", "treatment", "unified_names","tot_bio",
                      "no_stems", "perc.herb", "water.cont", "est.leaf.area",
                      "sla.d.m2kg1", "richness", "ltb","lsla.d","labu")
 
-# Subset a data-set to only control and treatment plots
+# ENCLOSED IN THE get_ready_for_the_sla_analyses
+# Subset a data-set to only control and treatment plots 
 subDat <- dwbRichF %>%
   filter(treatment %in% subsetVars)
 
@@ -1178,9 +1179,6 @@ print(knitr::kable(table(C50pred, test$pg.cat)))
 The above tree is just a one example of hundreds of averaged trees used in the random forest. A few key conclusions can be drawn from the above analyses is that we cannot in certain predict the faith of a tree species. But its biomass is the best predictor together with water content. SLA seems to be the least important.
 
 Let us now move to test SLA ability to predict the biomass of an individual. This is a bit tricky because we will use SLA estimated at the end of the experiment. From the leaf frame analyses that spanned all plant species in all treatment plots we saw high plasticity of that trait.
-
-
-
 
 
 ## Trait-based predictions of a species success
@@ -1369,7 +1367,6 @@ richness + abundance + $\Delta$SLA +
 
 # Get the delta data ready for th e given subset vars (comparison)
 subsetVars <- c("c", "i")
-
 source('code/get_data_ready_for_the_sla_analyses.R')
 
 # ggpubr::ggarrange(slaPlot, wcPlot, herbPlot)
@@ -1665,7 +1662,7 @@ pslap <- predictAndVisualize(p.mod,
                     p.dD,
                     "lsla.d",
                     n = 100,
-                    titlestring = "Predator - A",
+                    titlestring = "Predator - Specific Leaf Area",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Log(SLA)")
 
@@ -1677,7 +1674,7 @@ psitep <- predictAndVisualize(p.mod,
                     p.dD,
                     "fsite",
                     n = 100,
-                    titlestring = "Predator - B",
+                    titlestring = "Predator - Site",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Sites")
 
@@ -1685,9 +1682,23 @@ plabup <- predictAndVisualize(p.mod,
                     p.dD,
                     "labu",
                     n = 100,
-                    titlestring = "Predator - C",
+                    titlestring = "Predator - Abundance",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Log(stem number)")
+prichp <- predictAndVisualize(p.mod, 
+                    p.dD,
+                    "richness",
+                    n = 100,
+                    titlestring = "Predator - Richness",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Number od species")
+plrrslap <- predictAndVisualize(p.mod, 
+                    p.dD,
+                    "lrrsla",
+                    n = 100,
+                    titlestring = "Predator - LRR SLA",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "LRR SLA")
 
 
 # Insecticide-----------------------
@@ -1695,7 +1706,7 @@ ilabup <- predictAndVisualize(i.mod,
                     i.dD,
                     "labu",
                     n = 100,
-                    titlestring = "Insecticide - C",
+                    titlestring = "Insecticide - Abundance",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Log(stem number)")
 
@@ -1706,7 +1717,7 @@ hsitep <- predictAndVisualize(h.mod,
                     h.dD,
                     "fsite",
                     n = 100,
-                    titlestring = "Herbivory - A",
+                    titlestring = "Herbivory - Site",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Sites")
 
@@ -1714,7 +1725,7 @@ hwaterp <- predictAndVisualize(h.mod,
                     h.dD,
                     "water.cont",
                     n = 100,
-                    titlestring = "Herbivory - A",
+                    titlestring = "Herbivory - Water Content",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Water content")
 
@@ -1723,7 +1734,7 @@ hlabup <- predictAndVisualize(h.mod,
                     h.dD,
                     "labu",
                     n = 100,
-                    titlestring = "Herbivory - B",
+                    titlestring = "Herbivory - Abundance",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Log(stem number)")
 
@@ -1731,17 +1742,68 @@ hlrrslap <- predictAndVisualize(h.mod,
                     h.dD,
                     "lrrsla",
                     n = 100,
-                    titlestring = "Herbivory - B",
+                    titlestring = "Herbivory - LRR SLA",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "LRR SLA")
 
+# Fungicide
+
+fwaterp <- predictAndVisualize(f.mod, 
+                    f.dD,
+                    "water.cont",
+                    n = 100,
+                    titlestring = "Fungicide - Water Content",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Water content")
+
+fsitep <- predictAndVisualize(f.mod, 
+                    f.dD,
+                    "fsite",
+                    n = 100,
+                    titlestring = "Fungicide - Site",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Site")
+
+frichp <- predictAndVisualize(f.mod, 
+                    f.dD,
+                    "richness",
+                    n = 100,
+                    titlestring = "Fungicide - Richness",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Number of species per plot")
 
 # Plot
-ggpubr::ggarrange(pslap, psitep, plabup)
-
-ggpubr::ggarrange(ilabup)
-
-ggpubr::ggarrange(hwaterp, hsitep, hlabup, hlrrslap)
+ggpubr::ggarrange(pslap +
+                    scale_y_continuous(limits = c(-5, 10)),
+                  fwaterp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hwaterp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(psitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  fsitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hsitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1,legend = F)
+ggpubr::ggarrange(prichp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  frichp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(plabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  ilabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hlabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(plrrslap +
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hlrrslap + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, common.legend = T)
 
 ```
 
