@@ -22,13 +22,24 @@ library(ggplot2)
 library(dplyr)
 library(sjPlot)
 library(AICcmodavg)
+library(caTools)
+library(randomForest)
+library(rpart)
+library(rpart.plot)
+library(C50)
+library(printr)
+library(betapart)
+library(lsmeans)
+library(emmeans)
+library(multcomp)
+library(multcompView)
+
 
 ```
 
-We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites on elevations spanning `r 1900 - 200` m from 200 to 1900 m a.s.l. Low elevation is Wanang (200 m a.s.l.), Mid-elevation is Numba (700 m a.s.l.), and High elevation is Yawan (1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
+We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites: low elevation (Wanang, 200 m a.s.l.); mid-elevation (Numba, 700 m a.s.l.); high elevation (Yawan, 1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
 
-Figure 1. Median, 1st, second quadrilles, 1.5 IRQ distance, and outliers (labeled) for logarithm of biomass, richness diversity, and density for the three studied location/elevation.
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure S1 Characteistics"}
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 
 elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
                    RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
@@ -72,17 +83,63 @@ for (desc in unique(elevdataT$descriptor)) {
 elevdataT$outlierBool <- outliers 
 elevdataT <- elevdataT %>% mutate(outlier = ifelse(outlierBool, garden, ""))
 
+# Tests and labels
+
+labelsS1 <- data.frame()
+
+for (desc in unique(elevdataT$descriptor)){
+  for (trt in unique(elevdataT$treatment)){
+    subdat <- elevdataT %>% filter(descriptor == desc & treatment == trt)
+    subdat %>% 
+      group_by(fsite) %>%
+      summarize(ycoord = mean(valueTrans)) %>%
+      dplyr::select(ycoord)
+    mod1 <- lm(valueTrans ~ fsite, data = subdat)
+    anova(mod1)
+    lbls <- cld(object = emmeans(mod1, specs = "fsite"),Letters = c("a","b","c"))$.group
+    
+    print(paste(desc, trt, paste0(lbls, collapse = "")))
+    
+    labelsS1 <- rbind(labelsS1, data.frame(descriptor = desc,
+                                           sites = factor(c("wanang", "numba", "yawan"),
+                                                          levels = c("wanang", "numba", "yawan")),
+                                           labels = lbls,
+                                           treatment = trt,
+                                           ycoord = subdat %>% 
+                                             group_by(fsite) %>%
+                                             summarize(ycoord = mean(valueTrans)) %>%
+                                             dplyr::select(ycoord)))
+  }
+}
 
 
-ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
-  geom_boxplot()+
-  geom_text(aes(label=outlier), hjust = 1.2, vjust = -0.0005, na.rm=TRUE)+
-  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
-  theme_bw()
 
 ```
 
-Looking at the control plots Numba (the mid-elevation in our study) has the highest abundance and number of species. Predictably productivity decreases with elevation. Control plots in Numba are more variable than in other two elevations. Yawan has one site with lowest abundance (garden number seven).However no significant differences in variance were detected (Levene's and Bartellet's tests)
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap=" Figure S1. Median, 1st, 2nd quadrilles, 1.5 IRQ distance, and outliers (labeled) for logarithm of biomass, richness diversity, and density at three studied locations/elevations. Letters indicate statisitcal differences at the $\alpha$ = 0.05 level from the post hos Tukey test."}
+# Plot
+ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
+  geom_boxplot()+
+  geom_text(aes(label=outlier), 
+            size = 2, 
+            alpha = 0.6,
+            hjust = 1.2, 
+            vjust = -0.0005, 
+            na.rm=TRUE) +
+  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
+  geom_text(data = labelsS1,
+            aes(x = sites, y = ycoord + 2.5, group = trt,
+                label = labels),
+            size = 3) +
+  theme_bw() +
+  theme(strip.text = element_text(size =5.5),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1))+
+  xlab("")
+
+```
+
+Elevations were similar in their baseline productivity (total biomass). Mid and high elevations had the highest baseline productivity (total biomass). Abundance and species richness.  decreased with elevation. Control plots in Numba are more variable than in other two elevations. Yawan has one site with lowest abundance (garden number seven).However no significant differences in variance were detected (Levene's and Bartellet's tests)
 
 ## General effects of biotic factors
 
@@ -165,7 +222,7 @@ dats <- list(biomass = BIOMASS.LR,
 
 # Stack the data and rename descriptor names
 for (file in names(dats)){
-  print(file)
+  # print(file)
   dat <- dats[[file]]
   dat$descriptor <- ifelse(grepl("bio", file), "Biomass",
                            ifelse(grepl("dens", file), "Woody plant density",
@@ -259,16 +316,7 @@ Differences of LRR averages from zero may suggest that the effects are random, g
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. ...", fig.width= 10, fig.height= 10}
 
-# library(dplyr)
-# library(ggplot2)
-# library(GGally)
-# library(lme4)
-# library(lmerTest)
-# library(ggpmisc)
-# library(tibble)
-
 # LRR correlation plot
-
 ftreats <- unique(panel_data$ftreatment)
 
 fdat <- panel_data %>%
@@ -322,7 +370,7 @@ for (resp in unique(cpdata$response))   {
   for (desc in unique(cpdata$descriptor)){
     for (loc in unique(cpdata$site))     {
       
-      print(paste(resp, desc,loc))
+      # print(paste(resp, desc,loc))
       
       lrrtd <- cpdata %>%
         filter(response == resp,
@@ -429,19 +477,19 @@ lrr.cor.test.data <- c()
   for (desc in unique(fidata$descriptor)){
     for (loc in unique(fidata$site))     {
       
-      print(paste(desc,loc))
+      # print(paste(desc,loc))
       
       lrrtd <- fidata %>%
         filter(descriptor == desc,
                site == loc)
       
       # Test for normality
-      print(shapiro.test(lrrtd$x))
-      print(shapiro.test(lrrtd$y))
+      # print(shapiro.test(lrrtd$x))
+      # print(shapiro.test(lrrtd$y))
       
       lm.test.p <- summary(lm(lrrtd$y~lrrtd$x, data = lrrtd))$coefficients[2,4]
       
-      print(lm.test.p)
+      # print(lm.test.p)
       
       lrr.res <- data.frame(descriptor = desc,
                             site = loc,
@@ -504,7 +552,7 @@ lrr.cor.test.data <- c()
   for (desc in unique(fidata$descriptor)){
     for (loc in unique(fidata$site))     {
       
-      print(paste(desc,loc))
+      # print(paste(desc,loc))
       
       lrrtd <- fidata %>%
         filter(descriptor == desc,
@@ -560,7 +608,7 @@ for(row in 1:dim(sign.dat)[1]){
 
 ```
 
-### COMMUNITY COMPOSITION
+## COMMUNITY COMPOSITION
 
 At each elevation insect exclusion significantly affected the community composition [but only when all treatments were included, in pairwise comparisons, i.e., C vs I the composition was not changed significantly]. Fungicide treatment significantly affected the full plant community composition only at the highest elevation (Fig, 3; Appendix I, Tab. S1).
 
@@ -596,7 +644,7 @@ plot.list <- list()
 
 for(site.id in substr(unique(COMMVARS$site),1,1)){
   
-  print(site.id)
+  # print(site.id)
   
   SUB.VARS <- COMMVARS %>%
     filter(grepl(paste('^', site.id, sep = ""), site) & treatment %in% treats.to.consider)
@@ -609,7 +657,7 @@ for(site.id in substr(unique(COMMVARS$site),1,1)){
   
   h <- how(blocks = SUB.VARS$garden)
   
-  print(anova(rdamod, permutations = h, by = "terms"))
+  # print(anova(rdamod, permutations = h, by = "terms"))
   
   # Goodness
   gdnsof <- goodness(rdamod, model = "CCA", proportional = T)
@@ -707,223 +755,218 @@ BC dissimilarity at the control plots was higher in Wanang than in Numba. Additi
 
 # NEEDS TO BE FIXED
 
-# library(betapart)
-# 
-# csites <- grepl("_c\\b", COMMVARS$plotid)
-# fsites <- grepl("_f", COMMVARS$plotid)
-# isites <- grepl("_i", COMMVARS$plotid)
-# hsites <- grepl("_h", COMMVARS$plotid)
-# psites <- grepl("_p", COMMVARS$plotid)
-# 
-# wsites <- COMMVARS$site == "wanang"
-# nsites <- COMMVARS$site == "numba"
-# ysites <- COMMVARS$site == "yawan"
-# 
-# # B-C dissimilarities in C plots between sites
-# cdatc <- COMMDATA[grepl("c$", rownames(COMMDATA)), ]
-# cvars <- COMMVARS[rownames(cdatc), ]
-# 
-# # Make a matrix
+csites <- grepl("_c\\b", COMMVARS$plotid)
+fsites <- grepl("_f", COMMVARS$plotid)
+isites <- grepl("_i", COMMVARS$plotid)
+hsites <- grepl("_h", COMMVARS$plotid)
+psites <- grepl("_p", COMMVARS$plotid)
+
+wsites <- COMMVARS$site == "wanang"
+nsites <- COMMVARS$site == "numba"
+ysites <- COMMVARS$site == "yawan"
+
+# B-C dissimilarities in C plots between sites
+
+cdatc <- COMMDATA[grepl("c$", rownames(COMMDATA)), ]
+cvars <- COMMVARS[rownames(cdatc), ]
+
+# Make a matrix
 # for(i in 1:dim(cdatc)[1]){
-#   
 #   # Compare all other sites to the current i
 #   for (j in (1:dim(cdatc)[1])[-i]) {
 #     val <- beta.pair.abund(cdatc[c(i,j), ])
 #   }
-#   
 # }
-# 
-# # Comparisons between
-# wc.beta <- beta.pair.abund(COMMDATA[COMMVARS[wsites & csites,]$plotid,  ])
-# 
-# beta.df <- data.frame()
-# 
-# for(siteid in c("w","y","n")){
-#   for(treat in c("_c\\b","_f","_h","_i","_p")){
-#     
-#     # Subset the data
-#     nms <- rownames(COMMDATA)
-#     sel.nms <- nms[grepl(siteid, nms) & grepl(treat, nms)]
-#     site.treat.comm <- COMMDATA[sel.nms,]
-#     
-#     print(rownames(site.treat.comm))
-#     
-#     # Calculate beta diversity
-#     subbeta <- beta.pair.abund(site.treat.comm)
-#     
-#     # Add to a data frame
-#     balanced.df <- data.frame(site = siteid,
-#                               treat = treat,
-#                               vals = as.numeric(subbeta$beta.bray.bal),
-#                               component = "balanced")
-#     
-#     gradient.df <- data.frame(site = siteid,
-#                               treat = treat,
-#                               vals = as.numeric(subbeta$beta.bray.gra),
-#                               component = "gradient")
-#     
-#     bray.df <- data.frame(site = siteid,
-#                               treat = treat,
-#                               vals = as.numeric(subbeta$beta.bray),
-#                               component = "bray")
-#     
-#     sub.df <- rbind(balanced.df, gradient.df, bray.df)
-#       
-#     # Merge the datset
-#     beta.df <- rbind(beta.df,sub.df)
-#     
-#   }
-# }
+
+# Comparisons between
+wc.beta <- beta.pair.abund(COMMDATA[COMMVARS[wsites & csites,]$plotid,  ])
+
+beta.df <- data.frame()
+
+for(siteid in c("w","y","n")){
+  for(treat in c("_c\\b","_f","_h","_i","_p")){
+
+    # Subset the data
+    nms <- rownames(COMMDATA)
+    sel.nms <- nms[grepl(siteid, nms) & grepl(treat, nms)]
+    site.treat.comm <- COMMDATA[sel.nms,]
+
+    print(rownames(site.treat.comm))
+
+    # Calculate beta diversity
+    subbeta <- beta.pair.abund(site.treat.comm)
+
+    # Add to a data frame
+    balanced.df <- data.frame(site = siteid,
+                              treat = treat,
+                              vals = as.numeric(subbeta$beta.bray.bal),
+                              component = "balanced")
+
+    gradient.df <- data.frame(site = siteid,
+                              treat = treat,
+                              vals = as.numeric(subbeta$beta.bray.gra),
+                              component = "gradient")
+
+    bray.df <- data.frame(site = siteid,
+                              treat = treat,
+                              vals = as.numeric(subbeta$beta.bray),
+                              component = "bray")
+
+    sub.df <- rbind(balanced.df, gradient.df, bray.df)
+
+    # Merge the datset
+    beta.df <- rbind(beta.df,sub.df)
+
+  }
+}
+
 # beta.df
-# 
-# # Fix the site order
-# beta.df$fsite <- factor(beta.df$site, levels = c("w","n","y"))
-# 
-# # Transform 0s to 0.001 and 1s to 0.999
-# beta.df$trans.vals = ifelse(beta.df$vals == 1, 0.999999, 
-#                             ifelse(beta.df$vals == 0, 0.000001, beta.df$vals))
-# 
-# # Tests for individual facets
-# 
-# library(lsmeans)
-# library(emmeans)
-# library(multcomp)
-# library(multcompView)
-# 
+
+# Fix the site order
+beta.df$fsite <- factor(beta.df$site, levels = c("w","n","y"))
+
+# Transform 0s to 0.001 and 1s to 0.999
+beta.df$trans.vals = ifelse(beta.df$vals == 1, 0.999999,
+                            ifelse(beta.df$vals == 0, 0.000001, beta.df$vals))
+
+# Tests for individual facets
+cld.dat = data.frame()
+prws.comp <- list()
+
+# CLD data for comparisons between elevations
+for (comp in unique(beta.df$component)){
+  print(comp)
+  for (trt in unique(beta.df$treat)){
+    print(trt)
+
+    test.df <- beta.df %>%
+      filter(treat == trt,
+             component == comp)
+
+    # print(test.df)
+
+    mod1 <- betareg::betareg(trans.vals ~ fsite, data = test.df)
+
+    lsmod1 <- lsmeans(mod1,
+                      pairwise ~ fsite,
+                      adjust="tukey")
+
+    groups <- cld(lsmod1, Letters = c("abcdefg"))
+
+    y_loc = test.df %>%
+      group_by(fsite) %>%
+      summarise(y_loc = mean(trans.vals))
+
+    sub.cld <- data.frame(component = comp,
+               treat = trt,
+               fsite = groups$fsite,
+               gr.label = groups$.group,
+               y_loc = y_loc$y_loc[order(groups$fsite)])
+
+    print(y_loc)
+    print(sub.cld)
+
+    prws.comp[[paste(comp,trt)]] <- lsmod1
+
+    cld.dat = rbind(cld.dat, sub.cld)
+
+  }
+}
+
 # cld.dat = data.frame()
 # prws.comp <- list()
-# 
-# # CLD data for comparisons between elevations
-# for (comp in unique(beta.df$component)){
-#   print(comp)
-#   for (trt in unique(beta.df$treat)){
-#     print(trt)
-#     
-#     test.df <- beta.df %>%
-#       filter(treat == trt,
-#              component == comp)
-#     
-#     # print(test.df)
-#     
-#     mod1 <- betareg::betareg(trans.vals ~ fsite, data = test.df)
-#     
-#     lsmod1 <- lsmeans(mod1,
-#                       pairwise ~ fsite,
-#                       adjust="tukey")
-#     
-#     groups <- cld(lsmod1, Letters = c("abcdefg"))
-#     
-#     y_loc = test.df %>%
-#       group_by(fsite) %>%
-#       summarise(y_loc = mean(trans.vals))
-#     
-#     sub.cld <- data.frame(component = comp,
-#                treat = trt,
-#                fsite = groups$fsite,
-#                gr.label = groups$.group,
-#                y_loc = y_loc$y_loc[order(groups$fsite)])
-#     
-#     print(y_loc)
-#     print(sub.cld)
-#     
-#     prws.comp[[paste(comp,trt)]] <- lsmod1
-#     
-#     cld.dat = rbind(cld.dat, sub.cld)
-#     
-#   }
-# }
-# 
-# # cld.dat = data.frame()
-# # prws.comp <- list()
 # 
 # # For data for comparisons between treatments we need pairwise comps 
 # # (control vs treat) - this can be obtained from summary of the betareg
 # 
 # # library(glmmTMB)
-# 
-# pairwise.comp.res <- data.frame()
-# for (comp in unique(beta.df$component)){
-#   
-#   for (ste in unique(beta.df$fsite)){
-#     print(comp)
-#     print(ste)
-#     
-#     test.df <- beta.df %>%
-#       filter(fsite == ste,
-#              component == comp)
-#     
-#     # print(test.df)
-#     
-#     mod1 <- betareg::betareg(trans.vals ~ treat, data = test.df)
-#     
-#     breg.table <- summary(mod1)$coefficients$mean
-#     breg.pvals <- breg.table[,4]
-#     
-#     y_loc = test.df %>%
-#       group_by(treat) %>%
-#       summarise(y_loc = mean(trans.vals))
-#     
-#     pcr.row <- data.frame(comp = comp,
-#                           fsite = ste,
-#                           component = comp,
-#                           treat = names(breg.pvals),
-#                           p.vals = breg.pvals,
-#                           y_loc = y_loc$y_loc,
-#                           y_loc_trt = y_loc$treat)
-#     
-#     pcr.row <- pcr.row %>%
-#       mutate(label = ifelse(p.vals <= 0.05 & treat != "(Intercept)", "*",""))
-#     
-#     pairwise.comp.res <- rbind(pairwise.comp.res,pcr.row)
-#     
-#   }
-# }
-# 
-# pairwise.comp.res
-# 
+
+pairwise.comp.res <- data.frame()
+for (comp in unique(beta.df$component)){
+
+  for (ste in unique(beta.df$fsite)){
+    print(comp)
+    print(ste)
+
+    test.df <- beta.df %>%
+      filter(fsite == ste,
+             component == comp)
+
+    # print(test.df)
+
+    mod1 <- betareg::betareg(trans.vals ~ treat, data = test.df)
+
+    breg.table <- summary(mod1)$coefficients$mean
+    breg.pvals <- breg.table[,4]
+
+    y_loc = test.df %>%
+      group_by(treat) %>%
+      summarise(y_loc = mean(trans.vals))
+
+    pcr.row <- data.frame(comp = comp,
+                          fsite = ste,
+                          component = comp,
+                          treat = names(breg.pvals),
+                          p.vals = breg.pvals,
+                          y_loc = y_loc$y_loc,
+                          y_loc_trt = y_loc$treat)
+
+    pcr.row <- pcr.row %>%
+      mutate(label = ifelse(p.vals <= 0.05 & treat != "(Intercept)", "*",""))
+
+    pairwise.comp.res <- rbind(pairwise.comp.res,pcr.row)
+
+  }
+}
+
+pairwise.comp.res
+
 # # Plot
 # # tiff(filename='figures/beta_part_panel.tif',
 # #      height=5600,
 # #      width=5600,
 # #      units='px',
 # #      res=800,compression='lzw')
-# beta.part.plot <- ggplot(beta.df, aes(x = fsite, y = vals))+
-#   geom_jitter(width = 0.1, alpha = 0.2, shape = 16, size = 1.8)+
-#   stat_summary(fun.y = mean, na.rm = T,
-#                geom = "point", size = 3, col = "gray30")+
-#   stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
-#   stat_summary(fun.y = mean, aes(group = treat),
-#                geom = "line", alpha = 0.8, col = "gray30", lty = 2)+
-#   geom_text(data = cld.dat,
-#             aes(x = fsite, y = y_loc + 0.5,
-#                 label = gr.label),
-#             size = 3)+
-#   facet_grid(cols = vars(component), rows = vars(treat))
-# beta.part.plot + theme_bw()
-# 
-# # Plot for the component comparisons
-# pairwise.comp.res$fsite <- factor(pairwise.comp.res$fsite, levels = c("w","n","y"))
-# 
+
+beta.part.plot1 <- ggplot(beta.df, aes(x = fsite, y = vals))+
+  geom_jitter(width = 0.1, alpha = 0.2, shape = 16, size = 1.8)+
+  stat_summary(fun.y = mean, na.rm = T,
+               geom = "point", size = 3, col = "gray30")+
+  stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
+  stat_summary(fun.y = mean, aes(group = treat),
+               geom = "line", alpha = 0.8, col = "gray30", lty = 2)+
+  geom_text(data = cld.dat,
+            aes(x = fsite, y = y_loc + 0.5,
+                label = gr.label),
+            size = 3)+
+  facet_grid(cols = vars(component), rows = vars(treat)) + 
+  theme_bw()
+
+# Plot for the component comparisons
+pairwise.comp.res$fsite <- factor(pairwise.comp.res$fsite, levels = c("w","n","y"))
+
 # # tiff(filename='figures/beta_part_panel_treats.tif',
 # #      height=5600,
 # #      width=5600,
 # #      units='px',
 # #      res=800,compression='lzw')
-# 
-# # Alternative boxplot
-# beta.part.plot <- ggplot(beta.df, aes(x = treat, y = vals))+
-#   geom_boxplot()+
-#   # stat_summary(fun.y = mean, na.rm = T,
-#   #              geom = "point", size = 3, col = "gray30")+
-#   # stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
-#   geom_text(data = pairwise.comp.res,
-#             aes(x = y_loc_trt, y = y_loc + 0.5,
-#                 label = label), cex = 6,  col = "red", lwd = 2)+
-#   facet_grid(component ~ fsite)
-# 
-# beta.part.plot + theme_bw()
 
+# Alternative boxplot
+beta.part.plot2 <- ggplot(beta.df, aes(x = treat, y = vals))+
+  geom_boxplot()+
+  # stat_summary(fun.y = mean, na.rm = T,
+  #              geom = "point", size = 3, col = "gray30")+
+  # stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
+  geom_text(data = pairwise.comp.res,
+            aes(x = y_loc_trt, y = y_loc + 0.5,
+                label = label), cex = 6,  col = "red", lwd = 2)+
+  facet_grid(component ~ fsite) + 
+  theme_bw()
+```
 
+```{r, fig.width=10, fig.height=18}
+ggpubr::ggarrange(beta.part.plot1,
+                  beta.part.plot2, nrow = 2)
 ```
 
 
@@ -992,7 +1035,7 @@ Making sense out of the above:
 
 * Insect herbivores (P, I, H combined) can suppress plants in communities with low variability in species composition, which allows for new species to establish. Moreover, **insects reduce dissimilarity for highly variable communities** (is this true?). Exclusion of top predators has the same effect as insect exclusion on species turnover in Numba and Yawan. This is a probable result for a strong top-down control of the tri trophic interactions. Addition of generalist herbivores also correlated with the predator effects. If the effects of insects are mainly caused by specialists, then generalists interfering with their feeding could have the same results. But the effects can be more subtle than those of herbivore removal.
 
-### Trait based analyses
+### Traits and species faith
 
 In this section we focus on plant species traits and how these can help us predict the performance of individual species at a given plot. First we attempt to predict simply whether a species, considering it's traits, will be lost, gained or will remain in various treatment plots. We used random forest to investigate the importance of traits in predicting the species faith. Prediction accuracy and classifier_RF will tell us how good well the set of traits is (and which traits are most important in predicting faith) for the faith of individuals.
 
@@ -1034,145 +1077,155 @@ names(dwbRichF) <- c("site", "garden", "treatment", "unified_names","tot_bio",
 
 # ENCLOSED IN THE get_ready_for_the_sla_analyses
 # Subset a data-set to only control and treatment plots 
-subDat <- dwbRichF %>%
-  filter(treatment %in% subsetVars)
-
-lgsData <- data.frame()
-
-for (st in unique(subDat$site)){
-  for (gard in unique(subDat$garden)){
-    
-    stGardDat <- subDat %>%
-            filter(site == st,
-                   garden == gard)
-    
-    # Some quality control
-    if(dim(stGardDat)[1] == 0){
-      next
-      }
-    if(length(unique(stGardDat$treatment)) < 2){
-      next
-      }
-    
-    specInCtr <- unique(stGardDat[stGardDat$treatment == subsetVars[1], ]$unified_names)
-    specInTrt <- unique(stGardDat[stGardDat$treatment == subsetVars[2], ]$unified_names)
-    
-    spLost <- specInCtr[!(specInCtr %in% specInTrt)]
-    spGained <- specInTrt[!(specInTrt %in% specInCtr)]
-    
-    stGardDat$pg.cat <- ifelse(stGardDat$unified_names %in% spLost, "lost",
-                               ifelse(stGardDat$unified_names %in% spGained, "gained", "stayed"))
-    
-    
-    lgsData <- rbind(lgsData, stGardDat)
-    
-    
-  }
-}
+# subDat <- dwbRichF %>%
+#   filter(treatment %in% subsetVars)
+# 
+# lgsData <- data.frame()
+# 
+# for (st in unique(subDat$site)){
+#   for (gard in unique(subDat$garden)){
+#     
+#     stGardDat <- subDat %>%
+#             filter(site == st,
+#                    garden == gard)
+#     
+#     # Some quality control
+#     if(dim(stGardDat)[1] == 0){
+#       next
+#       }
+#     if(length(unique(stGardDat$treatment)) < 2){
+#       next
+#       }
+#     
+#     specInCtr <- unique(stGardDat[stGardDat$treatment == subsetVars[1], ]$unified_names)
+#     specInTrt <- unique(stGardDat[stGardDat$treatment == subsetVars[2], ]$unified_names)
+#     
+#     spLost <- specInCtr[!(specInCtr %in% specInTrt)]
+#     spGained <- specInTrt[!(specInTrt %in% specInCtr)]
+#     
+#     stGardDat$pg.cat <- ifelse(stGardDat$unified_names %in% spLost, "lost",
+#                                ifelse(stGardDat$unified_names %in% spGained, "gained", "stayed"))
+#     
+#     
+#     lgsData <- rbind(lgsData, stGardDat)
+#     
+#     
+#   }
+# }
 ```
 
 I perform the sane analyses for each treatment.
 
-```{r}
-
-# Function that performs RF analysis for a given treatment
-
-# It queries the lgsData that needs to be preapred using separate code (as above)
-
-getLgsData <- function (comp.trt = "i", data) {
-  
-  # This function queries the data to compute log
-  
-}
-
-
-# Returns:
-# 1) Classifier RF table
-# 2) Confusion matrix
-# 3) Regression tree example graph
-
-runRF <- function (lgsData) {
-  
-}
-
-```
-
-
-```{r}
+```{r, results='asis'}
 # Random Forest
 # Loading package
-library(caTools)
-library(randomForest)
 
-rfData <- lgsData %>%
+
+rfAnalysis <- function(lgsData) {
+  
+  rfData <- lgsData %>%
   mutate(pg.cat = as.factor(pg.cat),
          lest.leaf.area = log(est.leaf.area),
          lstem = log(no_stems)) %>%
   dplyr::select(pg.cat, lstem, perc.herb, water.cont,
                 lest.leaf.area, richness, ltb, lsla.d, treatment)
-
-# Try standardized, non-correlated variables
-rfDataRF <- rfData %>%
-  filter(!is.infinite(lest.leaf.area)) %>%
-  dplyr::select(pg.cat, perc.herb, water.cont,
-                richness, ltb, lsla.d)
-
-# Standardized
-rfDataRF[,-1] <- scale(rfDataRF[,-1])
-
-# Splitting data in train and test data
-split <- sample.split(rfDataRF, SplitRatio = 0.7)
-train <- subset(rfDataRF, split == "TRUE")
-test <- subset(rfDataRF, split == "FALSE")
+  # Try standardized, non-correlated variables
+  rfDataRF <- rfData %>%
+    filter(!is.infinite(lest.leaf.area)) %>%  
+    dplyr::select(pg.cat, perc.herb, water.cont, richness, ltb, lsla.d)
+  # Standardized
+  rfDataRF[,-1] <- scale(rfDataRF[,-1])
   
-classifier_RF = randomForest(x = train[-1],
-                             y = train$pg.cat,
-                             ntree = 500)
+  # Splitting data in train and test data
+  split <- sample.split(rfDataRF, SplitRatio = 0.7)
+  train <- subset(rfDataRF, split == "TRUE")
+  test <- subset(rfDataRF, split == "FALSE")
+  
+  classifier_RF = randomForest(x = train[-1],
+                               y = train$pg.cat,
+                               ntree = 500)
+  
+  # Predicting the Test set results
+  y_pred = predict(classifier_RF, newdata = test[-1])
+  
+  # Confusion Matrix
+  confusion_mtx = table(test[, 1], y_pred)
+  
+  # Regression C50
+  C50Fit <- C5.0(pg.cat ~., data=train,
+                 control = C5.0Control(minCases = 5))
+  C50pred <- predict(object=C50Fit, 
+                     newdata=test, 
+                     type="class")
+  
+  # return(list(rf_confusion_matrix = confusion_mtx,
+  #             classifier_for_varImpPlot = varImpPlot(classifier_RF),
+  #             reg_tree_table = table(C50pred, test$pg.cat),
+  #             reg_fit_for_plot = plot(C50Fit, cex = 0.5)))
+  
+  return(list(rf_confusion_matrix = confusion_mtx,
+              classifier_for_varImpPlot = classifier_RF,
+              reg_tree_table = table(C50pred, test$pg.cat),
+              reg_fit_for_plot = C50Fit))
+  
+  
+  }
+
+# rfData <- lgsData %>%
+#   mutate(pg.cat = as.factor(pg.cat),
+#          lest.leaf.area = log(est.leaf.area),
+#          lstem = log(no_stems)) %>%
+#   dplyr::select(pg.cat, lstem, perc.herb, water.cont,
+#                 lest.leaf.area, richness, ltb, lsla.d, treatment)
+# 
+# # Try standardized, non-correlated variables
+# rfDataRF <- rfData %>%
+#   filter(!is.infinite(lest.leaf.area)) %>%
+#   dplyr::select(pg.cat, perc.herb, water.cont,
+#                 richness, ltb, lsla.d)
+# 
+# # Standardized
+# rfDataRF[,-1] <- scale(rfDataRF[,-1])
+# 
+# # Splitting data in train and test data
+# split <- sample.split(rfDataRF, SplitRatio = 0.7)
+# train <- subset(rfDataRF, split == "TRUE")
+# test <- subset(rfDataRF, split == "FALSE")
+#   
+# classifier_RF = randomForest(x = train[-1],
+#                              y = train$pg.cat,
+#                              ntree = 500)
   
 # classifier_RF
   
 # Predicting the Test set results
-y_pred = predict(classifier_RF, newdata = test[-1])
+# y_pred = predict(classifier_RF, newdata = test[-1])
 
 # Variable importance plot
 # varImpPlot(classifier_RF)
-```
-
-Below is a confusion matrix for the RF
-
-```{r, results='asis'}
-# Confusion Matrix
-confusion_mtx = table(test[, 1], y_pred)
-print(knitr::kable(confusion_mtx))
 ```
 
 Using collected variables we cannot predict the faith of an individual species with high certainty. We can only predict which plants can be observed (stayed) at both control and insecticide treated plots. Error of that prediction is relatively low (0.16). For this prediction total biomass is the most important. SLA is least important, together with the number of stems. To visualize the division we run a single regression tree.
 
 ```{r, fig.width = 25, fig.height= 10}
 
-library(rpart)
-library(rpart.plot)
+# Run all random forests
 
-# Regression C50
-library(C50)
-library(printr)
+subsetVars <- c("c", "p")
+source('code/get_data_ready_for_the_sla_analyses.R')
+prfres <- rfAnalysis(lgsData)
 
-C50Fit <- C5.0(pg.cat ~., data=train,
-               control = C5.0Control(minCases = 5))
+subsetVars <- c("c", "i")
+source('code/get_data_ready_for_the_sla_analyses.R')
+irfres <- rfAnalysis(lgsData)
 
-C50pred <- predict(object=C50Fit, 
-                   newdata=test, 
-                   type="class")
+subsetVars <- c("c", "f")
+source('code/get_data_ready_for_the_sla_analyses.R')
+frfres <- rfAnalysis(lgsData)
 
-plot(C50Fit, cex = 0.5)
-
-```
-
-Lets see how good of a job the regression tree did. 
-
-```{r, results='asis'}
-
-print(knitr::kable(table(C50pred, test$pg.cat)))
+subsetVars <- c("c", "h")
+source('code/get_data_ready_for_the_sla_analyses.R')
+hrfres <- rfAnalysis(lgsData)
 
 ```
 
@@ -1180,6 +1233,16 @@ The above tree is just a one example of hundreds of averaged trees used in the r
 
 Let us now move to test SLA ability to predict the biomass of an individual. This is a bit tricky because we will use SLA estimated at the end of the experiment. From the leaf frame analyses that spanned all plant species in all treatment plots we saw high plasticity of that trait.
 
+```{r, figures-side, fig.show="hold", out.width="50%"}
+varImpPlot(prfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the predator exclusion')
+varImpPlot(irfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the insect exclusion')
+varImpPlot(frfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the fungi exclusion')
+varImpPlot(hrfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the herbivore addition')
+```
 
 ## Trait-based predictions of a species success
 
@@ -1262,7 +1325,7 @@ ggpubr::ggarrange(p1,p2, p3)
 #                            treatment == 'p')
 
 ```
-```{r}
+```{r, results='asis'}
 # Test for the relationship and the differences
 require(sjPlot)
 cwm.lm <- lm(log(cwm.sla)~log(sp.rich)*treatment + site, data = siteSLAdf)
