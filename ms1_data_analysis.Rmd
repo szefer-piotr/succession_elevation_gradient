@@ -11,8 +11,7 @@ knitr::opts_chunk$set(echo = FALSE, results='hide',warning=FALSE, message=FALSE)
 
 ```
 
-## Experimental design
-
+# Experimental design
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 # The source file loads the data preparation script, where the raw data is read and summarised for further analyses
@@ -36,6 +35,8 @@ library(multcompView)
 
 
 ```
+
+# Results
 
 We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites: low elevation (Wanang, 200 m a.s.l.); mid-elevation (Numba, 700 m a.s.l.); high elevation (Yawan, 1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
 
@@ -70,7 +71,7 @@ for (desc in unique(elevdataT$descriptor)) {
   for (st in unique(elevdataT$site)) {
     for (trt in unique(elevdataT$treatment)) {
       
-      print(paste(desc,st,trt))
+      # print(paste(desc,st,trt))
       
       outliers <- c(outliers,findoutlier(pull(elevdataT %>% filter(descriptor == desc,
                           site == st,
@@ -98,7 +99,7 @@ for (desc in unique(elevdataT$descriptor)){
     anova(mod1)
     lbls <- cld(object = emmeans(mod1, specs = "fsite"),Letters = c("a","b","c"))$.group
     
-    print(paste(desc, trt, paste0(lbls, collapse = "")))
+    # print(paste(desc, trt, paste0(lbls, collapse = "")))
     
     labelsS1 <- rbind(labelsS1, data.frame(descriptor = desc,
                                            sites = factor(c("wanang", "numba", "yawan"),
@@ -139,14 +140,12 @@ ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
 
 ```
 
-Elevations were similar in their baseline productivity (total biomass). Mid and high elevations had the highest baseline productivity (total biomass). Abundance and species richness.  decreased with elevation. Control plots in Numba are more variable than in other two elevations. Yawan has one site with lowest abundance (garden number seven).However no significant differences in variance were detected (Levene's and Bartellet's tests)
+Elevations were similar in their baseline productivity (total biomass). At the high elevation the plant abundance, richness and diversity was significantly higher than at the low elevation. Mid elevation has many outliers. However, no significant differences in variance were detected (Table S1)
 
 ## General effects of biotic factors
-
 We calculated log-response ratios for plant biomass, species richness, species diversity and stem density to be able to compare the effect sizes at individual elevations.
 
 Table 1. Test results for over-dispersion all descriptors at three studied elevations.
-
 ```{r, echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
 sjPlot::tab_df(lrr_test_df)
 ```
@@ -203,12 +202,12 @@ model_comp$Model <- rep(c("LM", "GLS"), each = 3)
 ```
 
 
-Table S2. Two models testing difference of LRR of predator exclosures from zero at each elevation.
-```{r}
+Table S2. Two models testing difference of LRR of predator exclosures from zero at each elevation. General Least Squares assumes over-dispersion in the data
+```{r, results='asis'}
 sjPlot::tab_df(model_comp)
 ```
 
-There is generally little evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. Including this in statistical modle (using 'varIdent(form = ~1|site)' as weights in the GLS function) showed significant difference of LRR in Yawan, that was not observed for LM model.
+There is generally no evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. Including this in statistical modle (using 'varIdent(form = ~1|site)' as weights in the GLS function) showed significant difference of LRR in Yawan, that was not observed for LM model.
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 1. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
 
@@ -251,9 +250,9 @@ panel_data$ftreatment <- factor(panel_data$ftreatment,
 aph <- 0.5
 
 # Create a factor variable for sites
-panel_data$fsite <- factor(panel_data$site, labels = c("Wanang",
-                                      "Numba",
-                                      "Yawan"))
+panel_data$fsite <- factor(panel_data$site, labels = c("Low",
+                                      "Mid",
+                                      "High"))
 
 # Display panel plot
 ggplot(panel_data, aes(x = fsite, y = lratio))+
@@ -277,8 +276,8 @@ ggplot(panel_data, aes(x = fsite, y = lratio))+
   
   theme_bw()+
   theme(strip.text = element_text(size =5.5),
-        axis.text.x = element_text(angle = 45,
-                                   hjust = 1))+
+        axis.text.x = element_text(angle = 0,
+                                   hjust = 0.5))+
   geom_hline(yintercept = 0, lty = 2)+
   ylab("Log response ratio")+xlab("")+
   facet_grid(descriptor ~ ftreatment)
@@ -287,7 +286,7 @@ ggplot(panel_data, aes(x = fsite, y = lratio))+
 
 ## Impact of treatments
 
-Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation. Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. At high elevation predator removal caused an increase in diversity, richness and density of woody plants.Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
+Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation. Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. At high elevation predator removal caused an increase in diversity, richness and density of woody plants. Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
 
 
 ```{r}
@@ -608,6 +607,7 @@ for(row in 1:dim(sign.dat)[1]){
 
 ```
 
+
 ## COMMUNITY COMPOSITION
 
 At each elevation insect exclusion significantly affected the community composition [but only when all treatments were included, in pairwise comparisons, i.e., C vs I the composition was not changed significantly]. Fungicide treatment significantly affected the full plant community composition only at the highest elevation (Fig, 3; Appendix I, Tab. S1).
@@ -638,8 +638,7 @@ COMMVARS <- COMMVARS %>%
 # RDA at each elevation
 
 ## 3.1 Analyses for each elevation
-
-
+ord.list <- list()
 plot.list <- list()
 
 for(site.id in substr(unique(COMMVARS$site),1,1)){
@@ -654,6 +653,8 @@ for(site.id in substr(unique(COMMVARS$site),1,1)){
   # Perform RDA and ANOVA and print the results
   rdamod <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(garden), 
                 data = SUB.VARS)
+  
+  ord.list[[site.id]] <- rdamod
   
   h <- how(blocks = SUB.VARS$garden)
   
@@ -718,7 +719,8 @@ for(site.id in substr(unique(COMMVARS$site),1,1)){
   
   p2 <- ggplot(species.dat, aes(x = RDA1*1.1, y = RDA2*1.1)) + 
     geom_text(data = species.dat %>%
-                filter(names %in% sign.names), aes(label = names))+
+                filter(names %in% sign.names), 
+              aes(label = names, alpha = 0.2))+
     geom_segment(data = arrow.dat, aes(x = 0, y = 0, 
                                        xend = RDA1, yend = RDA2),
                  arrow = arrow(length=unit(0.30,"cm"), 
@@ -752,46 +754,36 @@ ggpubr::ggarrange(plot.list[["w"]]$sites.ord,
 BC dissimilarity at the control plots was higher in Wanang than in Numba. Addition of herbivores created a monotonic decrease in dissimilarity with elevation (Fig. 4, reduction of dissimilarity means higher predictability of the plant community). In Wanang species composition changed mainly through turnover of species, in contrast to two other sites, where community changed through changes in the abundance structure (gradient component). 1. Baseline (?) species turnover is highest in Wanang. Gradient changes are smaller in wanang than in Numba. 2. Fungicide did not change the character of the community structure and assembly (patterns are similar in the case of both control and fungicide treatment). 3. Herbivore addition monotonically reduced dissimilarity (plots within the treatment were more similar to each other, reduced unpredictability of succession) by reducing it substantially in Yawan. This was caused by an increase in balanced component in numba and its reduction in Yawan. This means that species turnover between sites was reduced by additional herbivorous insects at the highest elevation. However, in both of these sites balanced component was similar. It was high in W and did not change there. 4. Insect removal monotonically reduces plant species turnover. Does not change the pattern of dissimilarity between elevations but substantially increases gradient component in Yawan (it increased slightly gradient component in Wanang and reduced significantly in Numba). Insect removal significantly reduced the species turnover (balanced component) in Yawan, and increased it in Numba. This means that the presence of insects (opposite of what the treatment does) increases species turnover in Y and reduces species turnover in N. Simultaneously it increase gradient component in Wanang and reduces it in Numba. Interestingly in Yawan further increase of herbivore pressure has the opposite effect again it brings it back to the previous level. Having additional herbivores has the same effect as not having insects at all in case of the balanced component. Predator treatmen is the same. In case of the gradient component only removal of insects was able to change it as indicated above. And only in wanang and numba. 5. Top-predators increase balanced and gradient component similar to insecticide treatement in Numba. Similarly to H and I it reduces balanced component in Yawan. But has no effect on BC dissimilarity. In Numba also reduce gradient component but does not do that in Yawan. Between sites: Balanced component is lowest in Yawan general BC dissimilarity is lowest in Yawan and gradient in Yawan is higher in Yawan than in Numba but similar to that in Wanang.
 
 ```{r}
+# csites <- grepl("_c\\b", COMMVARS$plotid)
+# fsites <- grepl("_f", COMMVARS$plotid)
+# isites <- grepl("_i", COMMVARS$plotid)
+# hsites <- grepl("_h", COMMVARS$plotid)
+# psites <- grepl("_p", COMMVARS$plotid)
 
-# NEEDS TO BE FIXED
-
-csites <- grepl("_c\\b", COMMVARS$plotid)
-fsites <- grepl("_f", COMMVARS$plotid)
-isites <- grepl("_i", COMMVARS$plotid)
-hsites <- grepl("_h", COMMVARS$plotid)
-psites <- grepl("_p", COMMVARS$plotid)
-
-wsites <- COMMVARS$site == "wanang"
-nsites <- COMMVARS$site == "numba"
-ysites <- COMMVARS$site == "yawan"
+# wsites <- COMMVARS$site == "wanang"
+# nsites <- COMMVARS$site == "numba"
+# ysites <- COMMVARS$site == "yawan"
 
 # B-C dissimilarities in C plots between sites
 
-cdatc <- COMMDATA[grepl("c$", rownames(COMMDATA)), ]
-cvars <- COMMVARS[rownames(cdatc), ]
-
-# Make a matrix
-# for(i in 1:dim(cdatc)[1]){
-#   # Compare all other sites to the current i
-#   for (j in (1:dim(cdatc)[1])[-i]) {
-#     val <- beta.pair.abund(cdatc[c(i,j), ])
-#   }
-# }
+# cdatc <- COMMDATA[grepl("c$", rownames(COMMDATA)), ]
+# cvars <- COMMVARS[rownames(cdatc), ]
 
 # Comparisons between
-wc.beta <- beta.pair.abund(COMMDATA[COMMVARS[wsites & csites,]$plotid,  ])
+# wc.beta <- beta.pair.abund(COMMDATA[COMMVARS[wsites & csites,]$plotid,  ])
 
 beta.df <- data.frame()
 
-for(siteid in c("w","y","n")){
+# siteid <- "^w"
+# treat <- "_c\\b"
+
+for(siteid in c("^w","^y","^n")){
   for(treat in c("_c\\b","_f","_h","_i","_p")){
 
     # Subset the data
     nms <- rownames(COMMDATA)
     sel.nms <- nms[grepl(siteid, nms) & grepl(treat, nms)]
     site.treat.comm <- COMMDATA[sel.nms,]
-
-    print(rownames(site.treat.comm))
 
     # Calculate beta diversity
     subbeta <- beta.pair.abund(site.treat.comm)
@@ -814,7 +806,7 @@ for(siteid in c("w","y","n")){
 
     sub.df <- rbind(balanced.df, gradient.df, bray.df)
 
-    # Merge the datset
+    # Merge the data-set
     beta.df <- rbind(beta.df,sub.df)
 
   }
@@ -823,7 +815,8 @@ for(siteid in c("w","y","n")){
 # beta.df
 
 # Fix the site order
-beta.df$fsite <- factor(beta.df$site, levels = c("w","n","y"))
+beta.df$fsite <- factor(beta.df$site, levels = c("^w","^n","^y"),
+                        labels = c("w","n","y"))
 
 # Transform 0s to 0.001 and 1s to 0.999
 beta.df$trans.vals = ifelse(beta.df$vals == 1, 0.999999,
@@ -835,15 +828,11 @@ prws.comp <- list()
 
 # CLD data for comparisons between elevations
 for (comp in unique(beta.df$component)){
-  print(comp)
   for (trt in unique(beta.df$treat)){
-    print(trt)
 
     test.df <- beta.df %>%
       filter(treat == trt,
              component == comp)
-
-    # print(test.df)
 
     mod1 <- betareg::betareg(trans.vals ~ fsite, data = test.df)
 
@@ -863,9 +852,6 @@ for (comp in unique(beta.df$component)){
                gr.label = groups$.group,
                y_loc = y_loc$y_loc[order(groups$fsite)])
 
-    print(y_loc)
-    print(sub.cld)
-
     prws.comp[[paste(comp,trt)]] <- lsmod1
 
     cld.dat = rbind(cld.dat, sub.cld)
@@ -873,20 +859,12 @@ for (comp in unique(beta.df$component)){
   }
 }
 
-# cld.dat = data.frame()
-# prws.comp <- list()
-# 
-# # For data for comparisons between treatments we need pairwise comps 
-# # (control vs treat) - this can be obtained from summary of the betareg
-# 
-# # library(glmmTMB)
-
 pairwise.comp.res <- data.frame()
 for (comp in unique(beta.df$component)){
 
   for (ste in unique(beta.df$fsite)){
-    print(comp)
-    print(ste)
+    # print(comp)
+    # print(ste)
 
     test.df <- beta.df %>%
       filter(fsite == ste,
@@ -919,15 +897,6 @@ for (comp in unique(beta.df$component)){
   }
 }
 
-pairwise.comp.res
-
-# # Plot
-# # tiff(filename='figures/beta_part_panel.tif',
-# #      height=5600,
-# #      width=5600,
-# #      units='px',
-# #      res=800,compression='lzw')
-
 beta.part.plot1 <- ggplot(beta.df, aes(x = fsite, y = vals))+
   geom_jitter(width = 0.1, alpha = 0.2, shape = 16, size = 1.8)+
   stat_summary(fun.y = mean, na.rm = T,
@@ -943,13 +912,8 @@ beta.part.plot1 <- ggplot(beta.df, aes(x = fsite, y = vals))+
   theme_bw()
 
 # Plot for the component comparisons
-pairwise.comp.res$fsite <- factor(pairwise.comp.res$fsite, levels = c("w","n","y"))
-
-# # tiff(filename='figures/beta_part_panel_treats.tif',
-# #      height=5600,
-# #      width=5600,
-# #      units='px',
-# #      res=800,compression='lzw')
+pairwise.comp.res$fsite <- factor(pairwise.comp.res$fsite,
+                                  levels = c("w","n","y"))
 
 # Alternative boxplot
 beta.part.plot2 <- ggplot(beta.df, aes(x = treat, y = vals))+
@@ -959,12 +923,12 @@ beta.part.plot2 <- ggplot(beta.df, aes(x = treat, y = vals))+
   # stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
   geom_text(data = pairwise.comp.res,
             aes(x = y_loc_trt, y = y_loc + 0.5,
-                label = label), cex = 6,  col = "red", lwd = 2)+
+                label = label), cex = 6,  col = "red")+
   facet_grid(component ~ fsite) + 
   theme_bw()
 ```
 
-```{r, fig.width=10, fig.height=18}
+```{r, fig.width=10, fig.height=16}
 ggpubr::ggarrange(beta.part.plot1,
                   beta.part.plot2, nrow = 2)
 ```
@@ -1033,7 +997,7 @@ Making sense out of the above:
 
 * Insects shape community composition at all elevations. Fungi affected community composition only in Yawan. Fungi increase the species richness, without affecting any other characteristics of the community (beta-diversity components). Whereas in Wanang despite having effect on richness and density the effects on the community composition was not visible possibly because of high baseline dissimilarity (variability in community composition) between sites. NUmba seems to be specific. Despite the effect being present they are being balanced in a way that left the community characteristics unchanged.
 
-* Insect herbivores (P, I, H combined) can suppress plants in communities with low variability in species composition, which allows for new species to establish. Moreover, **insects reduce dissimilarity for highly variable communities** (is this true?). Exclusion of top predators has the same effect as insect exclusion on species turnover in Numba and Yawan. This is a probable result for a strong top-down control of the tri trophic interactions. Addition of generalist herbivores also correlated with the predator effects. If the effects of insects are mainly caused by specialists, then generalists interfering with their feeding could have the same results. But the effects can be more subtle than those of herbivore removal.
+* Insect herbivores (P, I, H combined) can suppress plants in communities with low variability in species composition, which allows for new species to establish. Moreover, **insects reduce dissimilarity for highly variable communities** (is this true?). Exclusion of top predators has the same effect as insect exclusion on species turnover in Numba and Yawan. This is a probable result for a strong top-down control of the tri-trophic interactions. Addition of generalist herbivores also correlated with the predator effects. If the effects of insects are mainly caused by specialists, then generalists interfering with their feeding could have the same results. But the effects can be more subtle than those of herbivore removal.
 
 ### Traits and species faith
 
@@ -1171,38 +1135,6 @@ rfAnalysis <- function(lgsData) {
   
   }
 
-# rfData <- lgsData %>%
-#   mutate(pg.cat = as.factor(pg.cat),
-#          lest.leaf.area = log(est.leaf.area),
-#          lstem = log(no_stems)) %>%
-#   dplyr::select(pg.cat, lstem, perc.herb, water.cont,
-#                 lest.leaf.area, richness, ltb, lsla.d, treatment)
-# 
-# # Try standardized, non-correlated variables
-# rfDataRF <- rfData %>%
-#   filter(!is.infinite(lest.leaf.area)) %>%
-#   dplyr::select(pg.cat, perc.herb, water.cont,
-#                 richness, ltb, lsla.d)
-# 
-# # Standardized
-# rfDataRF[,-1] <- scale(rfDataRF[,-1])
-# 
-# # Splitting data in train and test data
-# split <- sample.split(rfDataRF, SplitRatio = 0.7)
-# train <- subset(rfDataRF, split == "TRUE")
-# test <- subset(rfDataRF, split == "FALSE")
-#   
-# classifier_RF = randomForest(x = train[-1],
-#                              y = train$pg.cat,
-#                              ntree = 500)
-  
-# classifier_RF
-  
-# Predicting the Test set results
-# y_pred = predict(classifier_RF, newdata = test[-1])
-
-# Variable importance plot
-# varImpPlot(classifier_RF)
 ```
 
 Using collected variables we cannot predict the faith of an individual species with high certainty. We can only predict which plants can be observed (stayed) at both control and insecticide treated plots. Error of that prediction is relatively low (0.16). For this prediction total biomass is the most important. SLA is least important, together with the number of stems. To visualize the division we run a single regression tree.
@@ -1248,10 +1180,6 @@ varImpPlot(hrfres$classifier_for_varImpPlot,
 
 ### At the level of the whole community
 
-```{r}
-# CWM vs richness
-```
-
 Community-weighted mean SLA (CWM SLA) was higher at low diversity plots. This means that species with RELATIVELY higher SLA were the ones that dominated the communities. In Numba baseline SLA was reduced even further. In Numba also fungicide treatment had lower baseline SLA. 
 
 In both cases slope of the relationship was increased (less steep, it was flatter, no relationship).
@@ -1295,8 +1223,9 @@ rownames(siteSLAdf) <- paste(substr(siteSLA$site,1,1),
 
 # Plot of CWM vs species richness
 require(scales)
-p1 <- ggplot(siteSLAdf, aes(x = sp.rich, y = cwm.sla, color = treatment))+
-  geom_point(aes(size = total.bio)) + 
+p1 <- ggplot(siteSLAdf, aes(x = sp.rich, y = cwm.sla))+
+  geom_point(aes(size = total.bio, color = treatment)) + 
+  stat_smooth(method = "lm")+
   scale_x_continuous(trans = 'log2',
     breaks = trans_breaks("log2", function(x) 2^x),
     labels = trans_format("log2", math_format(2^.x))) +
@@ -1325,6 +1254,7 @@ ggpubr::ggarrange(p1,p2, p3)
 #                            treatment == 'p')
 
 ```
+
 ```{r, results='asis'}
 # Test for the relationship and the differences
 require(sjPlot)
@@ -1368,17 +1298,89 @@ Our original idea was that SLA (approximation of a growth rate) should become a 
 
 ## SLA
 
-### Can SLA predict change in composition?
-
+### Can traits predict change in composition?
 SLA doesn’t predict RDA position along C->I, C->H, C->P, C -> F axes, at any elevation.
+Community composition change under a treatment may be independent of SLA. [key indicator of functionally important aspects of photosynthetic capacity, and is positively correlated with ecosystem productivity (White et al., 2000, Madani et al., 2017, Anderson et al., 2020). Reflects the abilities of light capture and adaption to environments of plants (Gao, Wang, and Zhang 2022)]
 
 ```{r}
+# Calculate position of species and site along a given treatment vector.
+function (oridnation, treatment, type = c('site','species')) {
+  NULL
+}
 
-# Figure
+surfData <- data.woody.brut %>%
+  filter(site == "wanang") %>%
+  group_by(unified_names) %>%
+  summarise(lsla.d = log(mean(sla.d, na.rm=T)),
+            water.cont = mean(water.cont, na.rm = T),
+            herbivory = mean(perc.herb, na.rm = T))
+
+# Add row names to sla data
+surfDataDf <- as.data.frame(surfData)
+tibble::column_to_rownames(surfData, var = 'unified_names')
+rownames(surfDataDf) <- surfDataDf$unified_names
+
+# Get the treatment vector.
+nm <- "f"
+# names(ord.list[["w"]])
+trtVcts <- ord.list[["w"]]$CCA$biplot[nm, c(1,2)]
+
+# Get species vector.
+all.specs <- ord.list[["w"]]$CCA$v[, c(1,2)]
+usednms <- surfData$unified_names[surfData$unified_names %in% rownames(all.specs)]
+specVcts <- all.specs[usednms,]
+
+# Projection of species onto treatment vector.
+VdotU <- ((specVcts %*% trtVcts))
+uNormSq <- (trtVcts %*% trtVcts)
+projUV <- (VdotU/as.numeric(uNormSq)) %*% t(as.matrix(trtVcts))
+
+# Get norm for each projection vector.
+positions <- apply(projUV, 1, function(x) sqrt(x %*% x))
+
+# Add positions to the data frame.
+modDat <- data.frame(value = c(surfDataDf[usednms, ]$lsla.d,
+                               surfDataDf[usednms, ]$water.cont,
+                               surfDataDf[usednms, ]$herbivory),
+                     label = rep(c("SLA", "Water Content", "Herbivory"), 
+                                 each = length(positions)),
+                     pos = positions[usednms])
+
+testDat <- data.frame(sla = surfDataDf[usednms, ]$lsla.d,
+                      water = surfDataDf[usednms, ]$water.cont,
+                      herb = surfDataDf[usednms, ]$herbivory,
+                      pos = positions[usednms])
+
+ggplot(modDat, aes(x = pos, y = value)) +
+  geom_point()+
+  stat_smooth(method = "lm") + 
+  facet_wrap(~label, scales = 'free')
+
+# Tests + phylogeny!!!!
+glsmod1 <- gls(pos ~ sla + water + herb, data = testDat)
+glsmod2 <- gls(pos ~ sla +       + herb, data = testDat)
+glsmod3 <- gls(pos ~ sla + water       , data = testDat)
+glsmod4 <- gls(pos ~               herb, data = testDat)
+glsmod5 <- gls(pos ~       water       , data = testDat)
+glsmod6 <- gls(pos ~ sla               , data = testDat)
+
+summary(glsmod1)
+summary(glsmod2)
+summary(glsmod3)
+summary(glsmod4)
+summary(glsmod5)
+summary(glsmod6)
+
+AIC(glsmod1,glsmod2,glsmod3,glsmod4,glsmod5,glsmod6)
+
+summary(glsmod1)
+
+myTree
+
+
+# Correlate positions with individual species' with their sla. CWM we can leave out because we know it correlates with the .
 
 ```
-
-Community composition change under a treatment may be independent of SLA. [key indicator of functionally important aspects of photosynthetic capacity, and is positively correlated with ecosystem productivity (White et al., 2000, Madani et al., 2017, Anderson et al., 2020). Reflects the abilities of light capture and adaption to environments of plants (Gao, Wang, and Zhang 2022)]
 
 ### Can SLA predict 'success' of a plant species?
 
