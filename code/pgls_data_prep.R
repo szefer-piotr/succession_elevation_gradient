@@ -47,7 +47,7 @@ replaceWithMedian <- function(data.woody, name = "piper_recessum", threshold = 1
   
   # Subset the data
   piper.dat <- data.woody %>% filter(unified_names == name)
-  print("step 1")
+  # print("step 1")
   
   # Change extremes and NA's into a meadian value
   new.sla.val <- median(piper.dat$sla.d.m2kg1, na.rm = T)
@@ -60,11 +60,11 @@ replaceWithMedian <- function(data.woody, name = "piper_recessum", threshold = 1
   }
   
   piper.dat.no.na <- piper.dat[!is.na(piper.dat$sla.d.m2kg1),]
-  print("step 2")
+  # print("step 2")
   
   # Replace extremes with the median
   piper.dat.no.na[piper.dat.no.na$sla.d.m2kg1 > threshold, ]$sla.d.m2kg1 <- new.sla.val
-  print("step 3")
+  # print("step 3")
   
   # Add these to the main data
   data.woody[data.woody$X %in% piper.dat.no.na$X, 

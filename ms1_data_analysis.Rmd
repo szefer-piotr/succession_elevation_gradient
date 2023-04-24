@@ -17,21 +17,22 @@ knitr::opts_chunk$set(echo = FALSE, results='hide',warning=FALSE, message=FALSE)
 # The source file loads the data preparation script, where the raw data is read and summarised for further analyses
 source('code/log_ratio_extraction.R')
 
-library(ggplot2)
-library(dplyr)
-library(sjPlot)
 library(AICcmodavg)
+library(betapart)
 library(caTools)
+library(C50)
+library(dplyr)
+library(emmeans)
+library(effects)
+library(ggplot2)
+library(lsmeans)
+library(multcomp)
+library(multcompView)
+library(printr)
 library(randomForest)
 library(rpart)
 library(rpart.plot)
-library(C50)
-library(printr)
-library(betapart)
-library(lsmeans)
-library(emmeans)
-library(multcomp)
-library(multcompView)
+library(sjPlot)
 
 
 ```
@@ -592,19 +593,6 @@ for(row in 1:dim(sign.dat)[1]){
   fidata[c2 & c3, ]$sign <- "signif"
 }
 
-# ggplot(fidata, aes(x = x, y = y)) +
-#   geom_point(size = 2, alpha = 0.4)+
-#   stat_smooth(data = fidata %>%
-#                 filter(sign == "signif"),
-#               method ="lm")+
-#   geom_hline(yintercept = 0)+
-#   geom_vline(xintercept = 0)+
-#   ylab("Effect size of insects")+
-#   xlab("Effect size of fungi")+
-#   theme_bw()+
-#   facet_grid(descriptor~site)
-
-
 ```
 
 
@@ -1039,43 +1027,7 @@ names(dwbRichF) <- c("site", "garden", "treatment", "unified_names","tot_bio",
                      "no_stems", "perc.herb", "water.cont", "est.leaf.area",
                      "sla.d.m2kg1", "richness", "ltb","lsla.d","labu")
 
-# ENCLOSED IN THE get_ready_for_the_sla_analyses
-# Subset a data-set to only control and treatment plots 
-# subDat <- dwbRichF %>%
-#   filter(treatment %in% subsetVars)
-# 
-# lgsData <- data.frame()
-# 
-# for (st in unique(subDat$site)){
-#   for (gard in unique(subDat$garden)){
-#     
-#     stGardDat <- subDat %>%
-#             filter(site == st,
-#                    garden == gard)
-#     
-#     # Some quality control
-#     if(dim(stGardDat)[1] == 0){
-#       next
-#       }
-#     if(length(unique(stGardDat$treatment)) < 2){
-#       next
-#       }
-#     
-#     specInCtr <- unique(stGardDat[stGardDat$treatment == subsetVars[1], ]$unified_names)
-#     specInTrt <- unique(stGardDat[stGardDat$treatment == subsetVars[2], ]$unified_names)
-#     
-#     spLost <- specInCtr[!(specInCtr %in% specInTrt)]
-#     spGained <- specInTrt[!(specInTrt %in% specInCtr)]
-#     
-#     stGardDat$pg.cat <- ifelse(stGardDat$unified_names %in% spLost, "lost",
-#                                ifelse(stGardDat$unified_names %in% spGained, "gained", "stayed"))
-#     
-#     
-#     lgsData <- rbind(lgsData, stGardDat)
-#     
-#     
-#   }
-# }
+
 ```
 
 I perform the sane analyses for each treatment.
@@ -1302,83 +1254,143 @@ Our original idea was that SLA (approximation of a growth rate) should become a 
 SLA doesn’t predict RDA position along C->I, C->H, C->P, C -> F axes, at any elevation.
 Community composition change under a treatment may be independent of SLA. [key indicator of functionally important aspects of photosynthetic capacity, and is positively correlated with ecosystem productivity (White et al., 2000, Madani et al., 2017, Anderson et al., 2020). Reflects the abilities of light capture and adaption to environments of plants (Gao, Wang, and Zhang 2022)]
 
-```{r}
-# Calculate position of species and site along a given treatment vector.
-function (oridnation, treatment, type = c('site','species')) {
-  NULL
-}
+```{r, results='asis'}
 
-surfData <- data.woody.brut %>%
-  filter(site == "wanang") %>%
+# Calculate position of species and site along a given treatment vector.
+
+traitPredsCommComp <- function (data = data.woody.brut,
+                                ordination = ord.list,
+                                phylogeny = myTree.rand.poly,
+                                treatment = "f", st = "wanang") {
+  
+  surfData <- data %>%
+  filter(site == st) %>%
   group_by(unified_names) %>%
   summarise(lsla.d = log(mean(sla.d, na.rm=T)),
             water.cont = mean(water.cont, na.rm = T),
             herbivory = mean(perc.herb, na.rm = T))
+  
+  # Add row names to sla data
+  surfDataDf <- as.data.frame(surfData)
+  rownames(surfDataDf) <- surfDataDf$unified_names
+  
+  # Get the treatment vector.
+  trtVcts <- ordination[[substr(st, 1, 1)]]$CCA$biplot[treatment, c(1,2)]
+  
+  # Get species vector.
+  all.specs <- ordination[[substr(st, 1, 1)]]$CCA$v[, c(1,2)]
+  usednms <- surfDataDf$unified_names[surfDataDf$unified_names %in% rownames(all.specs)]
+  specVcts <- all.specs[usednms,]
+  
+  # Projection of species onto treatment vector.
+  VdotU <- ((specVcts %*% trtVcts))
+  uNormSq <- (trtVcts %*% trtVcts)
+  projUV <- (VdotU/as.numeric(uNormSq)) %*% t(as.matrix(trtVcts))
+  
+  # Get norm for each projection vector.
+  positions <- apply(projUV, 1, function(x) sqrt(x %*% x))
+  
+  # Add positions to the data frame.
+  modDat <- data.frame(value = c(surfDataDf[usednms, ]$lsla.d,
+                                 surfDataDf[usednms, ]$water.cont,
+                                 surfDataDf[usednms, ]$herbivory),
+                       label = rep(c("SLA", "Water Content", "Herbivory"), 
+                                   each = length(positions)),
+                       pos = positions[usednms])
+  
+  testDat <- data.frame(sla = surfDataDf[usednms, ]$lsla.d,
+                        water = surfDataDf[usednms, ]$water.cont,
+                        herb = surfDataDf[usednms, ]$herbivory,
+                        pos = positions[usednms],
+                        unified_names = usednms)
+  
+  
+  
+  # print(ggplot(modDat, aes(x = pos, y = value)) +
+  #   geom_point()+
+  #   stat_smooth(method = "lm") + 
+  #   facet_wrap(~label, scales = 'free'))
+  
+  # Phylogeny ready
+  testDatTree <- testDat %>%
+    filter(unified_names %in% phylogeny$tip.label)
+  
+  # Tests + phylogeny!!!!
+  glsmod1 <- gls(pos ~ sla + water + herb,
+                 data = testDatTree,
+                 method = "ML",
+                 correlation = corMartins(2.718282,
+                       phy = phylogeny,
+                       form = ~unified_names,
+                       fixed = T),
+                 na.action = na.omit)
 
-# Add row names to sla data
-surfDataDf <- as.data.frame(surfData)
-tibble::column_to_rownames(surfData, var = 'unified_names')
-rownames(surfDataDf) <- surfDataDf$unified_names
+  # glsmod2 <- gls(pos ~ sla +       + herb, 
+  #                data = testDatTree,
+  #                method = "ML",
+  #                correlation = corMartins(2.718282,
+  #                      phy = myTree.rand.poly,
+  #                      form = ~unified_names,
+  #                      fixed = T),
+  #                na.action = na.omit)
+  # 
+  # glsmod3 <- gls(pos ~ sla + water       ,
+  #                data = testDatTree,
+  #                method = "ML",
+  #                correlation = corMartins(2.718282,
+  #                      phy = myTree.rand.poly,
+  #                      form = ~unified_names,
+  #                      fixed = T),
+  #                na.action = na.omit)
+  # 
+  # glsmod4 <- gls(pos ~               herb,
+  #                data = testDatTree,
+  #                method = "ML",
+  #                correlation = corMartins(2.718282,
+  #                      phy = myTree.rand.poly,
+  #                      form = ~unified_names,
+  #                      fixed = T),
+  #                na.action = na.omit)
+  # 
+  # glsmod5 <- gls(pos ~       water       ,
+  #                data = testDatTree,
+  #                method = "ML",
+  #                correlation = corMartins(2.718282,
+  #                      phy = myTree.rand.poly,
+  #                      form = ~unified_names,
+  #                      fixed = T),
+  #                na.action = na.omit)
+  # glsmod6 <- gls(pos ~ sla               ,
+  #                data = testDatTree,
+  #                method = "ML",
+  #                correlation = corMartins(2.718282,
+  #                      phy = myTree.rand.poly,
+  #                      form = ~unified_names,
+  #                      fixed = T),
+  #                na.action = na.omit)
+  
+  # Summary 
+  
+  tab_model(glsmod1, title = paste(st, treatment))
+  
+  # Prediction of the full model
+  # effx1 <- effect("sla", glsmod1, partial.residuals=T)
+  # effx2 <- effect("water", glsmod1, partial.residuals=T)
+  # effx3 <- effect("herb", glsmod1, partial.residuals=T)
 
-# Get the treatment vector.
-nm <- "f"
-# names(ord.list[["w"]])
-trtVcts <- ord.list[["w"]]$CCA$biplot[nm, c(1,2)]
+  # plot(effx1)
+  # plot(effx2)
+  # plot(effx3)
+  
+}
 
-# Get species vector.
-all.specs <- ord.list[["w"]]$CCA$v[, c(1,2)]
-usednms <- surfData$unified_names[surfData$unified_names %in% rownames(all.specs)]
-specVcts <- all.specs[usednms,]
+traitPredsCommComp(treatment = "f", st = "wanang")
+traitPredsCommComp(treatment = "f", st = "numba")
+traitPredsCommComp(treatment = "f", st = "yawan")
 
-# Projection of species onto treatment vector.
-VdotU <- ((specVcts %*% trtVcts))
-uNormSq <- (trtVcts %*% trtVcts)
-projUV <- (VdotU/as.numeric(uNormSq)) %*% t(as.matrix(trtVcts))
-
-# Get norm for each projection vector.
-positions <- apply(projUV, 1, function(x) sqrt(x %*% x))
-
-# Add positions to the data frame.
-modDat <- data.frame(value = c(surfDataDf[usednms, ]$lsla.d,
-                               surfDataDf[usednms, ]$water.cont,
-                               surfDataDf[usednms, ]$herbivory),
-                     label = rep(c("SLA", "Water Content", "Herbivory"), 
-                                 each = length(positions)),
-                     pos = positions[usednms])
-
-testDat <- data.frame(sla = surfDataDf[usednms, ]$lsla.d,
-                      water = surfDataDf[usednms, ]$water.cont,
-                      herb = surfDataDf[usednms, ]$herbivory,
-                      pos = positions[usednms])
-
-ggplot(modDat, aes(x = pos, y = value)) +
-  geom_point()+
-  stat_smooth(method = "lm") + 
-  facet_wrap(~label, scales = 'free')
-
-# Tests + phylogeny!!!!
-glsmod1 <- gls(pos ~ sla + water + herb, data = testDat)
-glsmod2 <- gls(pos ~ sla +       + herb, data = testDat)
-glsmod3 <- gls(pos ~ sla + water       , data = testDat)
-glsmod4 <- gls(pos ~               herb, data = testDat)
-glsmod5 <- gls(pos ~       water       , data = testDat)
-glsmod6 <- gls(pos ~ sla               , data = testDat)
-
-summary(glsmod1)
-summary(glsmod2)
-summary(glsmod3)
-summary(glsmod4)
-summary(glsmod5)
-summary(glsmod6)
-
-AIC(glsmod1,glsmod2,glsmod3,glsmod4,glsmod5,glsmod6)
-
-summary(glsmod1)
-
-myTree
-
-
-# Correlate positions with individual species' with their sla. CWM we can leave out because we know it correlates with the .
+traitPredsCommComp(treatment = "i", st = "wanang")
+traitPredsCommComp(treatment = "i", st = "numba")
+traitPredsCommComp(treatment = "i", st = "yawan")
 
 ```
 
