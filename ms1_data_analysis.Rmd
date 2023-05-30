@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE, results='hide',warning=FALSE, message=FALSE)
 
 ```
 
-# Experimental design
+# Materials and methods
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
 # The source file loads the data preparation script, where the raw data is read and summarised for further analyses
@@ -37,178 +37,16 @@ library(sjPlot)
 
 ```
 
-# Results
-
-We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites: low elevation (Wanang, 200 m a.s.l.); mid-elevation (Numba, 700 m a.s.l.); high elevation (Yawan, 1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
-
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
-
-elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
-                   RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
-                   RICHNESS %>% dplyr::select(site, garden, treatment, simpson), 
-                   DENSITY %>% dplyr::select(site, garden, treatment, tot.stem.no))
-
-findoutlier <- function(x) {
-  return(x < quantile(x, .25) - 1.5*IQR(x) | x > quantile(x, .75) + 1.5*IQR(x))
-}
-
-elevdata <- elev.bind %>% 
-  mutate(value = ifelse(!is.na(tot_bio), tot_bio, 
-                        ifelse(!is.na(sp_no), sp_no, 
-                               ifelse(!is.na(simpson), simpson, tot.stem.no)))) %>%
-  mutate(descriptor = ifelse(!is.na(tot_bio), "Total biomass [kg]", 
-                        ifelse(!is.na(sp_no), "Number of species", 
-                               ifelse(!is.na(simpson), "Simpson's diversity", "Abundance")))) %>%
-  dplyr::select(site, garden, treatment, value, descriptor) %>%
-  mutate(fsite = factor(site, levels = c("wanang", "numba","yawan"))) %>%
-  arrange(descriptor, fsite, treatment, garden)
-
-elevdataT <- elevdata %>% 
-  mutate(valueTrans = ifelse(descriptor == "Simpson's diversity", 
-                             value, log(value)))
-
-outliers <- c()
-for (desc in unique(elevdataT$descriptor)) {
-  for (st in unique(elevdataT$site)) {
-    for (trt in unique(elevdataT$treatment)) {
-      
-      # print(paste(desc,st,trt))
-      
-      outliers <- c(outliers,findoutlier(pull(elevdataT %>% filter(descriptor == desc,
-                          site == st,
-                          treatment == trt), valueTrans)))
-
-    }
-
-  }
-}
-elevdataT$outlierBool <- outliers 
-elevdataT <- elevdataT %>% mutate(outlier = ifelse(outlierBool, garden, ""))
-
-# Tests and labels
-
-labelsS1 <- data.frame()
-
-for (desc in unique(elevdataT$descriptor)){
-  for (trt in unique(elevdataT$treatment)){
-    subdat <- elevdataT %>% filter(descriptor == desc & treatment == trt)
-    subdat %>% 
-      group_by(fsite) %>%
-      summarize(ycoord = mean(valueTrans)) %>%
-      dplyr::select(ycoord)
-    mod1 <- lm(valueTrans ~ fsite, data = subdat)
-    anova(mod1)
-    lbls <- cld(object = emmeans(mod1, specs = "fsite"),Letters = c("a","b","c"))$.group
-    
-    # print(paste(desc, trt, paste0(lbls, collapse = "")))
-    
-    labelsS1 <- rbind(labelsS1, data.frame(descriptor = desc,
-                                           sites = factor(c("wanang", "numba", "yawan"),
-                                                          levels = c("wanang", "numba", "yawan")),
-                                           labels = lbls,
-                                           treatment = trt,
-                                           ycoord = subdat %>% 
-                                             group_by(fsite) %>%
-                                             summarize(ycoord = mean(valueTrans)) %>%
-                                             dplyr::select(ycoord)))
-  }
-}
-
-
-
-```
-
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap=" Figure S1. Median, 1st, 2nd quadrilles, 1.5 IRQ distance, and outliers (labeled) for logarithm of biomass, richness diversity, and density at three studied locations/elevations. Letters indicate statisitcal differences at the $\alpha$ = 0.05 level from the post hos Tukey test."}
-# Plot
-ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
-  geom_boxplot()+
-  geom_text(aes(label=outlier), 
-            size = 2, 
-            alpha = 0.6,
-            hjust = 1.2, 
-            vjust = -0.0005, 
-            na.rm=TRUE) +
-  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
-  geom_text(data = labelsS1,
-            aes(x = sites, y = ycoord + 2.5, group = trt,
-                label = labels),
-            size = 3) +
-  theme_bw() +
-  theme(strip.text = element_text(size =5.5),
-        axis.text.x = element_text(angle = 45,
-                                   hjust = 1))+
-  xlab("")
-
-```
-
-Elevations were similar in their baseline productivity (total biomass). At the high elevation the plant abundance, richness and diversity was significantly higher than at the low elevation. Mid elevation has many outliers. However, no significant differences in variance were detected (Table S1)
-
-## General effects of biotic factors
 We calculated log-response ratios for plant biomass, species richness, species diversity and stem density to be able to compare the effect sizes at individual elevations.
 
-Table 1. Test results for over-dispersion all descriptors at three studied elevations.
-```{r, echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
-sjPlot::tab_df(lrr_test_df)
-```
 
-```{r,  echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+# Results
 
-# Results of a GLS model with over-dispersion vs LM model for density LRR in the predator exclusion treatment.
-trtdata <-  trtdata  <- DENSITY.LR %>%
-    filter(treatment == 'p')
+  We collected data on biomass (total of `r round(sum(BIOMASS$tot_bio), 0)` kg), density, and plant traits: area lost to herbivores, water content, leaf dry matter content and specific leaf area for `r length(unique(data$unified_names))` woody plant species from three tropical forest sites: low elevation (Wanang, 200 m a.s.l.); mid-elevation (Numba, 700 m a.s.l.); high elevation (Yawan, 1900 m a.s.l.). We refer to the sites as Low, Mid- and High elevation throughout the text.
 
-trtlm <- lm(lratio ~ 0 + site, data = trtdata)
+  Elevations were similar in their baseline productivity (total biomass). At the high elevation the plant abundance, richness and diversity was significantly higher than at the low elevation. Mid elevation has many outliers. However, no significant differences in variance were detected (Table S1)
 
-trtgls <- nlme::gls(lratio ~ 0 + site, data = trtdata,
-                 weights = varIdent(form = ~1|site))
-
-# summary(trtlm)
-# summary(trtgls)
-
-
-aovtrt <- anova(trtlm)
-
-testStat <- aovtrt$`F-value`
-testP <- aovtrt$`p-value`
-    
-# Tukey post-hoc
-emm <- emmeans(object = trtlm,
-               specs = "site",
-               adjust = "mvt")
-
-mod_means <- multcomp::cld(object = emm,
-                           Letters = letters)$.group
-
-zero.dif.lm <- ifelse(summary(trtlm)$coefficients[,4] > 0.05, "","*")
-zero.dif.gls <- ifelse(summary(trtgls)$tTable[,4] > 0.05, "","*")
-
-
-lmres <- as_tibble(summary(trtlm)$coefficients)
-lmres <- rename(lmres, Estimate = 'Estimate', 
-               `Standard Error` = `Std. Error`, 
-               `T-value` =`t value`,
-               `P-value` = `Pr(>|t|)`)
-
-glsres <- as_tibble(summary(trtgls)$tTable)
-glsres <- rename(glsres,
-                 Estimate = 'Value', 
-                 `Standard Error` = "Std.Error", 
-                 `T-value` = "t-value", 
-                 `P-value` = 'p-value')
-
-model_comp <- rbind(lmres, glsres)
-model_comp$Site <- rep(c("Wanang", "Numba", "Yawan"), 2)
-model_comp$Model <- rep(c("LM", "GLS"), each = 3)
-
-```
-
-
-Table S2. Two models testing difference of LRR of predator exclosures from zero at each elevation. General Least Squares assumes over-dispersion in the data
-```{r, results='asis'}
-sjPlot::tab_df(model_comp)
-```
-
-There is generally no evidence for the over-dispersion in the LRR values at individual elevations. Only woody stem density for the predator exclusion showed some evidence of over-dispersion. Including this in statistical modle (using 'varIdent(form = ~1|site)' as weights in the GLS function) showed significant difference of LRR in Yawan, that was not observed for LM model.
+## General effects of biotic factors
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 1. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
 
@@ -284,35 +122,9 @@ ggplot(panel_data, aes(x = fsite, y = lratio))+
   facet_grid(descriptor ~ ftreatment)
 
 ```
-
-## Impact of treatments
-
-Positive effect of pathogenic fungi on richness was found at low and high elevations (Fig. 1) and on density at low elevation. Insects reduced biomass only at the mid-elevation, increased diversity at high and richness at high and low elevation. At high elevation predator removal caused an increase in diversity, richness and density of woody plants. Increase in generalist herbivore abundance reduced biomass and woody plant density at low elevation and richness at low and high elevations.
-
-
-```{r}
-
-# Check whether the RICHNESS.LR for predators is correct.
-# trtdata <-  trtdata  <- RICHNESS.LR %>%
-#     filter(treatment == 'p')
-
-# trtlm <- lm(lratio ~ 0 + site, data = trtdata)
-
-# summary(trtlm)
-
-# Tukey post-hoc
-# emm <- emmeans(object = trtlm,
-#                specs = "site",
-#                adjust = "mvt")
-
-# mod_means <- multcomp::cld(object = emm,
-#                            Letters = letters)$.group
-
-```
+Positive effects of pathogenic fungi on richness were found at low and high elevations (Fig. 1) and on density at low elevations. Insects decreased biomass only at mid-elevations, increased diversity at high elevations, and increased richness at high and low elevations. At high elevations, predator removal increased woody plant diversity, richness, and density. Increases in the number of generalist herbivores reduced woody plant biomass and density at low elevations and richness at low and high elevations.
 
 ## LRR correlations
-
-Differences of LRR averages from zero may suggest that the effects are random, generally weak and noisy. We now look at the LRR correlation for different treatments to probe some possible mechanisms of the biotic factors' action.
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. ...", fig.width= 10, fig.height= 10}
 
@@ -414,54 +226,21 @@ for(row in 1:dim(sign.dat)[1]){
   cpdata[c1 & c2 & c3, ]$sign <- "signif"
 }
 
-# ggplot(cpdata, aes(x = x, y = y)) +
-#   geom_point(size = 2, alpha = 0.4)+
-#   stat_smooth(data = cpdata %>%
-#                 filter(sign == "signif"),
-#               method ="lm")+
-#   geom_hline(yintercept = 0)+
-#   geom_vline(xintercept = 0)+
-#   ylab("Effect size of insects")+
-#   xlab("Effect size")+
-#   theme_bw()+
-#   facet_grid(response*descriptor~site)
+ggplot(cpdata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = cpdata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  ylab("Effect size of insects")+
+  xlab("Effect size")+
+  theme_bw()+
+  facet_grid(response*descriptor~site)
 
 ```
 
-
-#### OBSERVATIONS
-
-Correlation between LRR of insect effects were not very common and were observed in `r 9/(3*8) * 100` % of cases. Correlations were more often found in Yawan (five out of eight studied correlations) than in Numba (four out of eight) and no significant correlation was found in Wanang. If we also include correlations between predator exclusion (P) and P+A this ratio gets significantly higher for Yawan (9 out of 12 correlations). 
-
-All observed correlations of the top-predators effects were positively correlated with insect effects, whereas all effects of herbivore addition were negatively correlated with the insect effects.
-
-#### EXPLANATION
-
-If a plant community has a potential to be strongly negatively affected by insects (negative LRR of insects, strong top-down control), then the P+A would result in weaker or positive effects of additional generalist herbivores. Top down control seem to be stronger in the highlands and we see more frequent correlation of the LRR's. (Model where Intra-guild predators are being strongly limited by top predators.)
-
-What exactly happened after addition can however only be speculated here. In case of a  strong bottom-up control should not result in any sort of correlation like in Wanang. What I think happened was that spiders could be more active in the exclosures which resulted in their effects being similar to that of a simple exclusion.
-
-A few aspects of insect effects on plants can be important here: 
-If community is saturated with herbivores (Konno) then addition may have negative results.
-Herbivore resource limitation type (relative or absolute). Feeding mode change, adaptive trade off, risk avoidance. All these can only be speculated.
-
-Generalists are worse in consuming any individual plant biomass, therefore they may have positive effects on plants, when natural insect communities have negative effects. It is possible that addition of herbivores cause som disruption in the functioning of the insect community effect on vegetation.
-There were no correlation between factors’ effects on vegetation at the low elevation. Herbivore addition and removal were not correlated as expected by the strong bottom-up control.
-
-
-Simulation showed that it cannot be simply an effect of the effect-abundance relationship between abundance of insects and their effect (quadratic and linear function result in positive relationship).
-
-Top-down effects of predators and their positive correlation with insect effects can be explained well by the bottom-up control of insects by plants. It was also assumed in the above simulations. Empirically we do not observe any correlation between insect abundance and strength of the effect (lrr_simualtions.R at the end). There is also no correlation between richness of a community and its LRR for any of the treatments (lrr_simulations.R).
-
-
-#### SOME DISCLAIMERS
-
-It is noteworthy that plots where herbivores were added were also covered with nets to prevent increased predation, wich is known to be correlated with increased leaf damage (Katka). Therefore it cannot be interpreted directly as a simple increase in herbivory pressure even though this is what should be happening assuming simple chain model and top-down control by top-predators. 
-We do not know the faith of the added predators. It is most likely that they did not cause a permanent increase in the species abundance (graph here). However, herbivore damage in general was...
-
-### Predator exclusion and predator exclusion with insect addition
-
-The hypothesis that I have stated above, about increased activity of spiders in exclosures is here being investigated further. I want to see whether the addition of herbivores has a positive correlation with the regular exclosures. Positive correlation would suggest that the herbivore addition had little to no effect, and that spiders responding to a lack of predators would control the herbivore population even with boosted abundances.
+Correlations between LRR of insect effects were not very frequent and were observed in 50% of cases. Correlations were found more frequently in Yawan (five out of eight correlations examined) than in Numba (four out of eight) and no significant correlation was found in Wanang. When we also include correlations between predator exclusion (P) and P+A, this ratio becomes significantly higher for Yawan (9 out of 12 correlations). All observed correlations of top predator effects were positively correlated with insect effects, whereas all effects of herbivore admixture were negatively correlated with insect effects.
 
 ```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. Log-Response Ratio correlations for insects and fungi effects on bimoass, diversity adn density of woody plants"}
 
@@ -518,17 +297,17 @@ for(row in 1:dim(sign.dat)[1]){
   fidata[c2 & c3, ]$sign <- "signif"
 }
 
-# ggplot(fidata, aes(x = x, y = y)) +
-#   geom_point(size = 2, alpha = 0.4)+
-#   stat_smooth(data = fidata %>%
-#                 filter(sign == "signif"),
-#               method ="lm")+
-#   geom_hline(yintercept = 0)+
-#   geom_vline(xintercept = 0)+
-#   xlab("Predator removal")+
-#   ylab("Predator removal and insect addition")+
-#   theme_bw()+
-#   facet_grid(descriptor~site)
+ggplot(fidata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = fidata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  xlab("Predator removal")+
+  ylab("Predator removal and insect addition")+
+  theme_bw()+
+  facet_grid(descriptor~site)
 
 ```
 
@@ -592,6 +371,18 @@ for(row in 1:dim(sign.dat)[1]){
   
   fidata[c2 & c3, ]$sign <- "signif"
 }
+
+ggplot(fidata, aes(x = x, y = y)) +
+  geom_point(size = 2, alpha = 0.4)+
+  stat_smooth(data = fidata %>%
+                filter(sign == "signif"),
+              method ="lm")+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  xlab("Insects")+
+  ylab("Fungicide")+
+  theme_bw()+
+  facet_grid(descriptor~site)
 
 ```
 
@@ -1891,3 +1682,298 @@ ggpubr::ggarrange(plrrslap +
 
 ```
 
+# Discussion
+
+## LRR correlations
+
+  If a plant community has a potential to be strongly negatively affected by insects (negative LRR of insects, strong top-down control), then the P+A results in weaker or positive effects of additional generalist herbivores. Top down control seem to be stronger in the highlands and we see more frequent correlation of the LRR's. (Model where Intra-guild predators are being strongly limited by top predators.)
+  What exactly happened after addition can however only be speculated here. In case of a  strong bottom-up control should not result in any sort of correlation like in Wanang. What I think happened was that spiders could be more active in the exclosures which resulted in their effects being similar to that of a simple exclusion.
+  A few aspects of insect effects on plants can be important here: 
+If community is saturated with herbivores (Konno) then addition may have negative results.
+Herbivore resource limitation type (relative or absolute). Feeding mode change, adaptive trade off, risk avoidance. All these can only be speculated.
+  Generalists are worse in consuming any individual plant biomass, therefore they may have positive effects on plants, when natural insect communities have negative effects. It is possible that addition of herbivores cause som disruption in the functioning of the insect community effect on vegetation.
+There were no correlation between factors’ effects on vegetation at the low elevation. Herbivore addition and removal were not correlated as expected by the strong bottom-up control.
+  Simulation showed that it cannot be simply an effect of the effect-abundance relationship between abundance of insects and their effect (quadratic and linear function result in positive relationship).
+  Top-down effects of predators and their positive correlation with insect effects can be explained well by the bottom-up control of insects by plants. It was also assumed in the above simulations. Empirically we do not observe any correlation between insect abundance and strength of the effect (lrr_simualtions.R at the end). There is also no correlation between richness of a community and its LRR for any of the treatments (lrr_simulations.R).
+  It is noteworthy that plots where herbivores were added were also covered with nets to prevent increased predation, wich is known to be correlated with increased leaf damage (Katka). Therefore it cannot be interpreted directly as a simple increase in herbivory pressure even though this is what should be happening assuming simple chain model and top-down control by top-predators. 
+We do not know the faith of the added predators. It is most likely that they did not cause a permanent increase in the species abundance (graph here). However, herbivore damage in general was...
+  The hypothesis that I have stated above, about increased activity of spiders in exclosures is here being investigated further. I want to see whether the addition of herbivores has a positive correlation with the regular exclosures. Positive correlation would suggest that the herbivore addition had little to no effect, and that spiders responding to a lack of predators would control the herbivore population even with boosted abundances.
+  
+If a plant community has the potential to be strongly negatively impacted by insects (negative LRR from insects, strong top-down control), then P+A would result in weaker or positive impacts from additional generalist herbivores. Top-down control appears to be stronger in the highlands and we see more frequent correlation of LRRs. (Model in which intra-guild predators are strongly constrained by top predators). 
+
+However, what exactly happened after the addition can only be speculated here. With strong bottom-up control, there should not be a correlation like in Wanang. I suspect that the spiders were more active in the exclusion areas, causing their effects to be similar to simple exclusion. A few aspects of insect effects on plants may be important here:
+If the community is saturated with herbivores, the addition may have negative effects.
+Nature of resource limitation by herbivores (relative or absolute). Change in diet, adaptive trade-off, risk avoidance. All of these can only be speculated about. Generalists are worse at consuming each plant biomass, so they may have positive effects on plants, while natural insect communities have negative effects. It is possible that the addition of herbivores causes a disruption in the functioning of the insect community that affects vegetation.
+There was no correlation between the effects of the factors on vegetation at the low elevations. The addition and removal of herbivores were not correlated, as expected from the strong bottom-up control.
+
+The simulations showed that it could not simply be an effect of the relationship between insect abundance and its effect (quadratic and linear functions yield a positive relationship).
+ The top-down effects of predators and their positive correlation with insect effects can be well explained by the bottom-up control of insects by plants. This was also assumed in the simulations above. Empirically, we observe no correlation between insect abundance and effect strength (lrr_simualtions.R at the end). There is also no correlation between the abundance of a community and its LRR for any of the treatments (lrr_simulations.R). It is worth noting that the plots where herbivores were used were also covered with nets to prevent increased predation, which is known to correlate with increased leaf damage (Katka). Therefore, this cannot be directly interpreted as a simple increase in herbivore pressure, although it should be, assuming a simple chain model and top-down control by top predators.
+We do not know the beliefs of the additional predators. Most likely, they did not lead to a permanent increase in species diversity (graph here). However, the damage from herbivores in general has been... The hypothesis I made above, about increased spider activity in the enclosures, is being further explored here. I want to see if the addition of herbivores has a positive correlation with the regular exclosures. A positive correlation would suggest that the addition of herbivores has little to no effect and that spiders responding to a lack of predators control the herbivore population even with increased abundance.
+
+
+# Supplement
+
+There is generally no evidence for the over-dispersion in the LRR values at individual elevations. 
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+
+elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, simpson), 
+                   DENSITY %>% dplyr::select(site, garden, treatment, tot.stem.no))
+
+findoutlier <- function(x) {
+  return(x < quantile(x, .25) - 1.5*IQR(x) | x > quantile(x, .75) + 1.5*IQR(x))
+}
+
+elevdata <- elev.bind %>% 
+  mutate(value = ifelse(!is.na(tot_bio), tot_bio, 
+                        ifelse(!is.na(sp_no), sp_no, 
+                               ifelse(!is.na(simpson), simpson, tot.stem.no)))) %>%
+  mutate(descriptor = ifelse(!is.na(tot_bio), "Total biomass [kg]", 
+                        ifelse(!is.na(sp_no), "Number of species", 
+                               ifelse(!is.na(simpson), "Simpson's diversity", "Abundance")))) %>%
+  dplyr::select(site, garden, treatment, value, descriptor) %>%
+  mutate(fsite = factor(site, levels = c("wanang", "numba","yawan"))) %>%
+  arrange(descriptor, fsite, treatment, garden)
+
+elevdataT <- elevdata %>% 
+  mutate(valueTrans = ifelse(descriptor == "Simpson's diversity", 
+                             value, log(value)))
+
+outliers <- c()
+for (desc in unique(elevdataT$descriptor)) {
+  for (st in unique(elevdataT$site)) {
+    for (trt in unique(elevdataT$treatment)) {
+      
+      # print(paste(desc,st,trt))
+      
+      outliers <- c(outliers,findoutlier(pull(elevdataT %>% filter(descriptor == desc,
+                          site == st,
+                          treatment == trt), valueTrans)))
+
+    }
+
+  }
+}
+elevdataT$outlierBool <- outliers 
+elevdataT <- elevdataT %>% mutate(outlier = ifelse(outlierBool, garden, ""))
+
+# Tests and labels
+
+labelsS1 <- data.frame()
+
+for (desc in unique(elevdataT$descriptor)){
+  for (trt in unique(elevdataT$treatment)){
+    subdat <- elevdataT %>% filter(descriptor == desc & treatment == trt)
+    subdat %>% 
+      group_by(fsite) %>%
+      summarize(ycoord = mean(valueTrans)) %>%
+      dplyr::select(ycoord)
+    mod1 <- lm(valueTrans ~ fsite, data = subdat)
+    anova(mod1)
+    lbls <- cld(object = emmeans(mod1, specs = "fsite"),Letters = c("a","b","c"))$.group
+    
+    # print(paste(desc, trt, paste0(lbls, collapse = "")))
+    
+    labelsS1 <- rbind(labelsS1, data.frame(descriptor = desc,
+                                           sites = factor(c("wanang", "numba", "yawan"),
+                                                          levels = c("wanang", "numba", "yawan")),
+                                           labels = lbls,
+                                           treatment = trt,
+                                           ycoord = subdat %>% 
+                                             group_by(fsite) %>%
+                                             summarize(ycoord = mean(valueTrans)) %>%
+                                             dplyr::select(ycoord)))
+  }
+}
+
+
+
+```
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap=" Figure S1. Median, 1st, 2nd quadrilles, 1.5 IRQ distance, and outliers (labeled) for logarithm of biomass, richness diversity, and density at three studied locations/elevations. Letters indicate statisitcal differences at the $\alpha$ = 0.05 level from the post hos Tukey test."}
+# Plot
+ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
+  geom_boxplot()+
+  geom_text(aes(label=outlier), 
+            size = 2, 
+            alpha = 0.6,
+            hjust = 1.2, 
+            vjust = -0.0005, 
+            na.rm=TRUE) +
+  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
+  geom_text(data = labelsS1,
+            aes(x = sites, y = ycoord + 2.5, group = trt,
+                label = labels),
+            size = 3) +
+  theme_bw() +
+  theme(strip.text = element_text(size =5.5),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1))+
+  xlab("")
+
+```
+
+**Table S1**. Test results for over-dispersion all descriptors at three studied elevations.
+```{r, echo=FALSE, results='show', fig.show='all', warning=FALSE, message=FALSE}
+sjPlot::tab_df(lrr_test_df)
+```
+
+Only woody stem density for the predator exclusion showed some evidence of over-dispersion. Including this in statistical model (using *varIdent(form = ~1|site)* as weights in the GLS function) showed significant difference of LRR in Yawan, that was not observed for LM model.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+
+elev.bind <- rbind(BIOMASS %>% dplyr::select(site, garden, treatment, tot_bio), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, sp_no), 
+                   RICHNESS %>% dplyr::select(site, garden, treatment, simpson), 
+                   DENSITY %>% dplyr::select(site, garden, treatment, tot.stem.no))
+
+findoutlier <- function(x) {
+  return(x < quantile(x, .25) - 1.5*IQR(x) | x > quantile(x, .75) + 1.5*IQR(x))
+}
+
+elevdata <- elev.bind %>% 
+  mutate(value = ifelse(!is.na(tot_bio), tot_bio, 
+                        ifelse(!is.na(sp_no), sp_no, 
+                               ifelse(!is.na(simpson), simpson, tot.stem.no)))) %>%
+  mutate(descriptor = ifelse(!is.na(tot_bio), "Total biomass [kg]", 
+                        ifelse(!is.na(sp_no), "Number of species", 
+                               ifelse(!is.na(simpson), "Simpson's diversity", "Abundance")))) %>%
+  dplyr::select(site, garden, treatment, value, descriptor) %>%
+  mutate(fsite = factor(site, levels = c("wanang", "numba","yawan"))) %>%
+  arrange(descriptor, fsite, treatment, garden)
+
+elevdataT <- elevdata %>% 
+  mutate(valueTrans = ifelse(descriptor == "Simpson's diversity", 
+                             value, log(value)))
+
+outliers <- c()
+for (desc in unique(elevdataT$descriptor)) {
+  for (st in unique(elevdataT$site)) {
+    for (trt in unique(elevdataT$treatment)) {
+      
+      # print(paste(desc,st,trt))
+      
+      outliers <- c(outliers,findoutlier(pull(elevdataT %>% filter(descriptor == desc,
+                          site == st,
+                          treatment == trt), valueTrans)))
+
+    }
+
+  }
+}
+elevdataT$outlierBool <- outliers 
+elevdataT <- elevdataT %>% mutate(outlier = ifelse(outlierBool, garden, ""))
+
+# Tests and labels
+
+labelsS1 <- data.frame()
+
+for (desc in unique(elevdataT$descriptor)){
+  for (trt in unique(elevdataT$treatment)){
+    subdat <- elevdataT %>% filter(descriptor == desc & treatment == trt)
+    subdat %>% 
+      group_by(fsite) %>%
+      summarize(ycoord = mean(valueTrans)) %>%
+      dplyr::select(ycoord)
+    mod1 <- lm(valueTrans ~ fsite, data = subdat)
+    anova(mod1)
+    lbls <- cld(object = emmeans(mod1, specs = "fsite"),Letters = c("a","b","c"))$.group
+    
+    # print(paste(desc, trt, paste0(lbls, collapse = "")))
+    
+    labelsS1 <- rbind(labelsS1, data.frame(descriptor = desc,
+                                           sites = factor(c("wanang", "numba", "yawan"),
+                                                          levels = c("wanang", "numba", "yawan")),
+                                           labels = lbls,
+                                           treatment = trt,
+                                           ycoord = subdat %>% 
+                                             group_by(fsite) %>%
+                                             summarize(ycoord = mean(valueTrans)) %>%
+                                             dplyr::select(ycoord)))
+  }
+}
+
+
+
+```
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap=" Figure S1. Median, 1st, 2nd quadrilles, 1.5 IRQ distance, and outliers (labeled) for logarithm of biomass, richness diversity, and density at three studied locations/elevations. Letters indicate statisitcal differences at the $\alpha$ = 0.05 level from the post hos Tukey test."}
+# Plot
+ggplot(elevdataT, aes(y = valueTrans, x = fsite, label = garden))+
+  geom_boxplot()+
+  geom_text(aes(label=outlier), 
+            size = 2, 
+            alpha = 0.6,
+            hjust = 1.2, 
+            vjust = -0.0005, 
+            na.rm=TRUE) +
+  facet_grid(vars(descriptor), vars(treatment), scales = "free")+
+  geom_text(data = labelsS1,
+            aes(x = sites, y = ycoord + 2.5, group = trt,
+                label = labels),
+            size = 3) +
+  theme_bw() +
+  theme(strip.text = element_text(size =5.5),
+        axis.text.x = element_text(angle = 45,
+                                   hjust = 1))+
+  xlab("")
+
+```
+
+```{r,  echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE}
+
+# Results of a GLS model with over-dispersion vs LM model for density LRR in the predator exclusion treatment.
+trtdata <-  trtdata  <- DENSITY.LR %>%
+    filter(treatment == 'p')
+
+trtlm <- lm(lratio ~ 0 + site, data = trtdata)
+
+trtgls <- nlme::gls(lratio ~ 0 + site, data = trtdata,
+                 weights = varIdent(form = ~1|site))
+
+# summary(trtlm)
+# summary(trtgls)
+
+
+aovtrt <- anova(trtlm)
+
+testStat <- aovtrt$`F-value`
+testP <- aovtrt$`p-value`
+    
+# Tukey post-hoc
+emm <- emmeans(object = trtlm,
+               specs = "site",
+               adjust = "mvt")
+
+mod_means <- multcomp::cld(object = emm,
+                           Letters = letters)$.group
+
+zero.dif.lm <- ifelse(summary(trtlm)$coefficients[,4] > 0.05, "","*")
+zero.dif.gls <- ifelse(summary(trtgls)$tTable[,4] > 0.05, "","*")
+
+
+lmres <- as_tibble(summary(trtlm)$coefficients)
+lmres <- rename(lmres, Estimate = 'Estimate', 
+               `Standard Error` = `Std. Error`, 
+               `T-value` =`t value`,
+               `P-value` = `Pr(>|t|)`)
+
+glsres <- as_tibble(summary(trtgls)$tTable)
+glsres <- rename(glsres,
+                 Estimate = 'Value', 
+                 `Standard Error` = "Std.Error", 
+                 `T-value` = "t-value", 
+                 `P-value` = 'p-value')
+
+model_comp <- rbind(lmres, glsres)
+model_comp$Site <- rep(c("Wanang", "Numba", "Yawan"), 2)
+model_comp$Model <- rep(c("LM", "GLS"), each = 3)
+
+```
+
+**Table S2**. Two models testing difference of LRR of predator exclosures from zero at each elevation. General Least Squares assumes over-dispersion in the data
+```{r, results='asis'}
+sjPlot::tab_df(model_comp)
+```
