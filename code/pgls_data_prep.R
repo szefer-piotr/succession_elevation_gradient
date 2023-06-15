@@ -155,3 +155,11 @@ data.woody <- replaceWithMedian(data.woody, name = "meliosma_pinnata")
 data.woody[which(data.woody$sla.d.m2kg1 == max(data.woody$sla.d.m2kg1, na.rm = T)),]
 # 21 numba     g5         i oreocnide_rubescens
 data.woody <- replaceWithMedian(data.woody, name = "oreocnide_rubescens")
+
+# Correlation of traits
+# pairs(log(data.woody.brut[,c("sla.d",'perc.herb','water.cont')]))
+# dataxxx <- log(data.woody.brut[,c("sla.d",'perc.herb','water.cont')])
+# dataxxx <- dataxxx[complete.cases(dataxxx), ]
+# dataxxx <- dataxxx[!is.infinite(rowSums(dataxxx)),]
+# biplot(vegan::rda(dataxxx), type = "text", choices = c(2,3))
+

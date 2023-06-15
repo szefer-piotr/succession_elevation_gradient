@@ -25,7 +25,7 @@ assemble <- function (siteCode,
                       accuracy = 0.001){
   
   # Samples random community with constraints defined by the given site code:
-  # number of species an dbiomass randomized is equal to the observed values.
+  # number of species and biomass randomized is equal to the observed values.
   
   # Calculate characteristics of that site
   empiricalSpNo <- sum(plant_mat[siteCode, ]>0)
