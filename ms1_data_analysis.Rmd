@@ -726,6 +726,10 @@ all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite,
                                                                            "Yawan"))
 
 test.df <- data.frame()
+
+all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite, levels = c("Wanang",
+                                                  "Numba","Yawan"))
+
 for (st in unique(all.pairs_max_accuracy$fsite)){
   for (cp in unique(all.pairs_max_accuracy$comp)){
     
@@ -753,6 +757,9 @@ for (st in unique(all.pairs_max_accuracy$fsite)){
 
 test.df <- test.df %>%
   mutate(label = ifelse(test.res < 0.05, "*"," "))
+test.df$fsite <- factor(test.df$fsite, levels = c("Wanang",
+                                                  "Numba",
+                                                  "Yawan"))
 
 ggplot(all.pairs_max_accuracy, aes(x = treatment, y = RC))+
   # geom_boxplot()+
@@ -951,9 +958,11 @@ cwmFun <- function(sla.d.m2kg1, tot_bio){
 siteSLA <- data.woody.brut %>%
   filter(treatment %in% c('i','c','p','h', 'f')) %>%
   mutate(tot_bio = ifelse(is.infinite(tot_bio), NA, tot_bio),
-         sla.d.m2kg1 = ifelse(is.infinite(sla.d.m2kg1), NA, sla.d.m2kg1)) %>%
+         sla.d.m2kg1 = ifelse(is.infinite(sla.d.m2kg1), NA, sla.d.m2kg1),
+         water.cont = ifelse(is.infinite(water.cont), NA, water.cont)) %>%
   group_by(site, garden, treatment) %>%
   summarise(cwm.sla = cwmFun(sla.d.m2kg1, n.tot_bio),
+            cwm.wc = cwmFun(water.cont, n.tot_bio),
             sp.rich = n(),
             total.bio = sum(n.tot_bio))
 
@@ -966,6 +975,20 @@ rownames(siteSLAdf) <- paste(substr(siteSLA$site,1,1),
 
 # Plot of CWM vs species richness
 require(scales)
+
+
+p1.wc <- ggplot(siteSLAdf, aes(x = sp.rich, y = cwm.wc))+
+  geom_point(aes(size = total.bio, color = treatment)) + 
+  stat_smooth(method = "lm")+
+  scale_x_continuous(trans = 'log2',
+    breaks = trans_breaks("log2", function(x) 2^x),
+    labels = trans_format("log2", math_format(2^.x))) +
+  scale_y_continuous(trans = 'log2',
+    breaks = trans_breaks("log2", function(x) 2^x),
+    labels = trans_format("log2", math_format(2^.x))) +  theme_minimal()
+
+
+
 p1 <- ggplot(siteSLAdf, aes(x = sp.rich, y = cwm.sla))+
   geom_point(aes(size = total.bio, color = treatment)) + 
   stat_smooth(method = "lm")+
@@ -988,7 +1011,8 @@ p3 <- ggplot(siteSLAdf, aes(x = site, y = cwm.sla, fill = treatment))+
     breaks = trans_breaks("log2", function(x) 2^x),
     labels = trans_format("log2", math_format(2^.x))) +  theme_minimal()
 
-ggpubr::ggarrange(p1,p2, p3)
+# ggpubr::ggarrange(p1,p2, p3)
+ggpubr::ggarrange(p1,p1.wc)
 
 # What is that value for the Y, g8, p?
 # This seem to be an outlier - very low total biomass

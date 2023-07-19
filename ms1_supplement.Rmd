@@ -1,0 +1,25 @@
+---
+title: "Supplement X. Bottom-up drivers of the LRR effects"
+author: "Piotr Szefer"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+source('code/lrr_and_community_chars_correlations.R')
+```
+
+```{r}
+tab_model(biolrr.mod0)
+```
+
+```{r pressure, echo=FALSE, fig.width=10, fig.height=10}
+ggpubr::ggarrange(p1, p1.1,
+                  nrow = 2)
+```
+
