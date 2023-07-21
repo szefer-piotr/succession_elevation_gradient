@@ -1,9 +1,9 @@
 source('code/log_ratio_extraction.R')
 
-RICHNESS.LR
-BIOMASS.LR
-DIVERSITY.LR
-DENSITY.LR
+# RICHNESS.LR
+# BIOMASS.LR
+# DIVERSITY.LR
+# DENSITY.LR
 
 RichLRR = RICHNESS.LR$lratio
 ConRicVal = RICHNESS.LR$cval
@@ -332,7 +332,11 @@ summary(divlrr.ric.mod0)
 ##############################################
 # richness does not explain LRR in diversity
 
-# More complex models with two desscriptors
+
+#############################################################################
+###########   BIOMASS
+#############################################################################
+# More complex models with two descriptors ---
 biolrr.mod0 <- lm(BioLRR ~ lcbv * Treatment*Site + lcrv*Treatment*Site, 
                   data = LRR_DEP_TEST_DATA %>% 
                     filter(Treatment != "h"))
@@ -429,34 +433,300 @@ p2 <- plot_model(biolrr.mod0, type="pred", terms = c("lcbv", "Site"))
 p3 <- plot_model(biolrr.mod0, type="pred", terms = c("lcbv", "Treatment"))
 
 
+#############################################################################
+###########   Diversity  
+#############################################################################
+
+# More complicated models for diversity ----
+divlrr.mod0 <- lm(DivLRR ~ lcbv * Treatment*Site + lcrv*Treatment*Site, 
+                  data = LRR_DEP_TEST_DATA %>% 
+                    filter(Treatment != "h"))
+
+# Alternative models
+divlrr.mod1 <- lm(DivLRR ~ lcbv * Treatment*Site + lcrv*Treatment,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod2 <- lm(DivLRR ~ lcbv * Treatment*Site + lcrv*Site,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod3 <- lm(DivLRR ~ lcbv * Treatment*Site + lcrv,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod4 <- lm(DivLRR ~ lcbv * Treatment*Site,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod5 <- lm(DivLRR ~ lcbv * Treatment,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod6 <- lm(DivLRR ~ lcbv,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod7 <- lm(DivLRR ~ 1,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod8 <- lm(DivLRR ~ lcrv * Treatment*Site + lcbv*Treatment,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod9 <- lm(DivLRR ~ lcrv * Treatment*Site + lcbv*Site,
+                  data = LRR_DEP_TEST_DATA %>%
+                    filter(Treatment != "h"))
+
+divlrr.mod10 <- lm(DivLRR ~ lcrv * Treatment*Site + lcbv,
+                   data = LRR_DEP_TEST_DATA %>%
+                     filter(Treatment != "h"))
+
+divlrr.mod11 <- lm(DivLRR ~ lcrv * Treatment*Site,
+                   data = LRR_DEP_TEST_DATA %>%
+                     filter(Treatment != "h"))
+
+divlrr.mod12 <- lm(DivLRR ~ lcrv * Treatment,
+                   data = LRR_DEP_TEST_DATA %>%
+                     filter(Treatment != "h"))
+
+divlrr.mod13 <- lm(DivLRR ~ lcrv,
+                   data = LRR_DEP_TEST_DATA %>%
+                     filter(Treatment != "h"))
+
+divlrr.mod14 <- lm(DivLRR ~ 1,
+                   data = LRR_DEP_TEST_DATA %>%
+                     filter(Treatment != "h"))
+
+# Model withouth treatments to comparison
+divlrr.modNoTrt <- lm(DivLRR ~ lcbv * Site + lcrv * Site, 
+                      data = LRR_DEP_TEST_DATA %>% 
+                        filter(Treatment != "h"))
+
+
+AIC(divlrr.mod0,
+    divlrr.mod1,
+    divlrr.mod2,
+    divlrr.mod3,
+    divlrr.mod4,
+    divlrr.mod5,
+    divlrr.mod6,
+    divlrr.mod7,
+    divlrr.mod8,
+    divlrr.mod9,
+    divlrr.mod10,
+    divlrr.mod11,
+    divlrr.mod12,
+    divlrr.mod13,
+    divlrr.mod14)
+
+# anova(biolrr.mod5, biolrr.mod0) # This model is almost better
+
+library(sjPlot)
+
+
+
+########################################################
+#######
+###
+
+# NONLINEAR TRENDS
+
+###
+#######
+########################################################
+
+########################################################
+###########   BIOMASS
+########################################################
+
+# More complex models with two descriptors ----
+
+# biolrr.nl.mod0 <- lm(BioLRR ~ lcbv * Treatment*Site + 
+#                        I(lcbv^2) * Treatment*Site + 
+#                        I(lcrv^2) * Treatment*Site + 
+#                        lcrv*Treatment*Site, 
+#                      data = LRR_DEP_TEST_DATA)
+
+
+biolrr.nl.mod0 <- lm(BioLRR ~ lcbv * Treatment*Site + 
+                    I(lcbv^2) * Treatment*Site + 
+                    I(lcrv^2) * Treatment*Site + 
+                    lcrv*Treatment*Site, 
+                  data = LRR_DEP_TEST_DATA %>% 
+                    filter(Treatment != "h"))
+library(MASS)
+final.biolrr.nl.mod <- stepAIC(biolrr.nl.mod0, scope = BioLRR ~ 1)
+summary(final.biolrr.nl.mod)
+
+# anova(biolrr.nl.mod0, final.biolrr.nl.mod, test = 'Chisq') # No difference - simpler wins
+
+# nl.p1 <- plot_model(final.biolrr.nl.mod, type="pred", terms = c("lcbv", "Treatment"),
+#                  show.data = T)
+# nl.p1.1 <- plot_model(final.biolrr.nl.mod, type="pred", terms = c("lcrv", "Treatment", "Site"),
+#                    show.data = T)
+# nl.p2 <- plot_model(final.biolrr.nl.mod, type="pred", terms = c("lcbv", "Site"))
+# nl.p3 <- plot_model(final.biolrr.nl.mod, type="pred", terms = c("lcbv", "Treatment"))
+
+
+#############################################################################
+###########   Diversity  
+#############################################################################
+
+
+# More complex models with two descriptors ---
+# divlrr.nl.mod0 <- lm(DivLRR ~ lcbv * Treatment*Site + 
+#                        lcbv2 * Treatment*Site + 
+#                        lcrv2 * Treatment*Site + 
+#                        lcrv*Treatment*Site, 
+#                      data = LRR_DEP_TEST_DATA %>% 
+#                        filter(Treatment != "h")%>%
+#                        mutate(lcbv2 = I(lcbv^2),
+#                               lcrv2 = I(lcrv^2)))
+# 
+# 
+divlrr.nl.mod0 <- lm(DivLRR ~ lcbv * Treatment*Site +
+                       I(lcbv^2) * Treatment*Site +
+                       I(lcrv^2) * Treatment*Site +
+                       lcrv*Treatment*Site,
+                     data = LRR_DEP_TEST_DATA %>%
+                       filter(Treatment != "h"))
+library(MASS)
+final.divlrr.nl.mod <- stepAIC(divlrr.nl.mod0, scope = DivLRR ~ 1)
+summary(final.divlrr.nl.mod)
+# 
+data <- as.data.frame(LRR_DEP_TEST_DATA[LRR_DEP_TEST_DATA$Treatment != "h",
+                                        'DivLRR'])
+
+# plot(predict(final.divlrr.nl.mod) ~ data$DivLRR)
+# abline(0,1)
+
+
+# Diversity Lrr predictions and plot ----
+
+model <- final.divlrr.nl.mod
+pred.val <- 'lcbv'
+data <- LRR_DEP_TEST_DATA %>% 
+  filter(Treatment != "h")
+
+sites = c("wanang","numba","yawan")
+treatments = c("i", "f","p")
+grain = 100
+
+
+# Build a data frame with varying pred.var variable and average value for the rest
+pvv <- data[,pred.val] # pred.va. values
+predictor <- seq(length = grain, from = min(pvv), to = max(pvv))
+  
+# Make a df for predictions.
+newdata <- expand.grid(lcbv = pvv$lcbv, 
+                       Site = sites, 
+                       Treatment = treatments, 
+                       lcrv = mean(data$lcrv, na.rm=T))
+
+newdata$lcrv <- ifelse(newdata$Site == "wanang", 
+                       mean(data[data$Site == "wanang", ]$lcrv, na.rm=T),
+                       ifelse(newdata$Site == "numba", 
+                              mean(data[data$Site == "numba", ]$lcrv, na.rm=T),
+                              mean(data[data$Site == "yawan", ]$lcrv, na.rm=T)))  
+
+
+# Predict
+pred.values <- predict(model, newdata = newdata, se.fit = TRUE)
+pred.df <- data.frame(pred.vals = pvv, Predicted = pred.values$fit,
+                      SE = pred.values$se.fit,
+                      Site = newdata$Site,
+                      Treatment = newdata$Treatment,
+                      Richness = newdata$lcrv)
+  
+DivPredPlot <- ggplot(pred.df, aes(x = lcbv, y = Predicted, group = Site))+
+  geom_line(aes(color = Site), lwd = 1) + 
+  geom_ribbon(aes(ymin = Predicted - SE,
+                  ymax = Predicted + SE),
+              alpha = 0.1,
+              fill = 'grey50', colour = NA)+
+  theme_bw() + 
+  geom_point(data = data, aes(x = lcbv, y = RichLRR, 
+                              color = Site, alpha = 0.5)) +
+  facet_grid(~Treatment) + 
+  xlab('Log[No. of woody plant species]') +
+  ylab("LRR of diversity (Simpson's index)")
+
+
+# Biomass LRR pediction and plot ----
+
+model <- final.biolrr.nl.mod
+pred.val <- 'lcbv'
+data <- LRR_DEP_TEST_DATA %>% 
+  filter(Treatment != "h")
+
+sites = c("wanang","numba","yawan")
+treatments = c("i", "f","p")
+grain = 100
+
+require(dplyr)
+
+# Build a data frame with varying pred.var variable and average value for the rest
+pvv <- data[,pred.val] # pred.va. values
+predictor <- seq(length = grain, from = min(pvv), to = max(pvv))
+
+# Make a df for predictions.
+newdata <- expand.grid(lcbv = pvv$lcbv, 
+                       Site = sites, 
+                       Treatment = treatments)
+
+newdata$lcrv <- ifelse(newdata$Site == "wanang", 
+                       mean(data[data$Site == "wanang", ]$lcrv, na.rm=T),
+                       ifelse(newdata$Site == "numba", 
+                              mean(data[data$Site == "numba", ]$lcrv, na.rm=T),
+                              mean(data[data$Site == "yawan", ]$lcrv, na.rm=T)))
+
+# Predict
+pred.values <- predict(model, newdata = newdata, se.fit = TRUE)
+pred.df <- data.frame(pred.vals = pvv, Predicted = pred.values$fit,
+                      SE = pred.values$se.fit,
+                      Site = newdata$Site,
+                      Treatment = newdata$Treatment,
+                      Richness = newdata$lcrv)
+
+BioPredPlot <- ggplot(pred.df, aes(x = lcbv, y = Predicted, group = Site))+
+  geom_line(aes(color = Site), lwd = 1) + 
+  geom_ribbon(aes(ymin = Predicted - SE,
+                  ymax = Predicted + SE),
+              alpha = 0.1,
+              fill = 'grey50', colour = NA)+
+  theme_bw() + 
+  geom_point(data = data, aes(x = lcbv, y = BioLRR, 
+                              color = Site, alpha = 0.5)) +
+  facet_grid(~Treatment) +
+  xlab('Log[No. of woody plant species]') +
+  ylab('LRR of biomass')
 
 
 # BIOMASS vs SPECIES RICHNESS ----
-rb.cor.dat <- RICHNESS
-rb.cor.dat$bio = BIOMASS$tot_bio
+# rb.cor.dat <- RICHNESS
+# rb.cor.dat$bio = BIOMASS$tot_bio
+# 
+# ggplot(rb.cor.dat, aes(x=sp_no, y=bio)) +
+#   geom_point(aes(colour = treatment)) +
+#   scale_x_continuous(trans='log2') +
+#   scale_y_continuous(trans='log2') + 
+#   stat_smooth(method = "lm")
+# 
+# # control no relation
+# summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
+#              filter(treatment == "c")))
+# # Insecticide - YES
+# summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
+#              filter(treatment == "i")))
+# # Fungicide
+# summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
+#              filter(treatment == "f")))
+# # Herbivore YES
+# summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
+#              filter(treatment == "h")))
+# # Predator YES
+# summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
+#              filter(treatment == "p")))
 
-ggplot(rb.cor.dat, aes(x=sp_no, y=bio)) +
-  geom_point(aes(colour = treatment)) +
-  scale_x_continuous(trans='log2') +
-  scale_y_continuous(trans='log2') + 
-  stat_smooth(method = "lm")
-
-# control no relation
-summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
-             filter(treatment == "c")))
-# Insecticide - YES
-summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
-             filter(treatment == "i")))
-# Fungicide
-summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
-             filter(treatment == "f")))
-# Herbivore YES
-summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
-             filter(treatment == "h")))
-# Predator YES
-summary(lm(log(bio) ~ log(sp_no), data = rb.cor.dat %>% 
-             filter(treatment == "p")))
-
-
-
-# Tests

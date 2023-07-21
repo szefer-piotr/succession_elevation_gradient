@@ -6,20 +6,120 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, results='hide')
 ```
 
-
-```{r cars}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, results='hide'}
 source('code/lrr_and_community_chars_correlations.R')
+source('code/elevation_descriptors.R')
 ```
 
-```{r}
-tab_model(biolrr.mod0)
+
+# Introduction
+
+Aim of our study was to evaluate to what extent pathogenic fungi, insect herbivores, and their predators shape community composition of pioneer stages of tropical forest regeneration. Further we were interested in the effect of natural elevation gradient on the direction and strength of these effects.
+
+Looking at biomass, diversity (number of species and Simpson's index values), and density of woody plant species. Biomass did not change much with elevation, but diversity and density peaked at the mid elevation.
+
+```{r, fig.cap="Figure 1. Characteristics of three studied sites: biomass, richness, diversity (Simpson's index) and density of woody plants at the control sites."}
+
+ggpubr::ggarrange(bio.plot, rich.plot, div.plot, dens.plot)
+
+```
+
+Now lets look at the effects that the biotic factors had on the vegetation characteristics.
+
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 1. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
+
+# bio, dens, div, rich
+panel_data <- data.frame()
+
+dats <- list(biomass = BIOMASS.LR, 
+             denssity = DENSITY.LR, 
+             diversity = DIVERSITY.LR, 
+             richness = RICHNESS.LR)
+
+# Stack the data and rename descriptor names
+for (file in names(dats)){
+  # print(file)
+  dat <- dats[[file]]
+  dat$descriptor <- ifelse(grepl("bio", file), "Biomass",
+                           ifelse(grepl("dens", file), "Woody plant density",
+                                  ifelse(grepl("div", file),"Diversity", "Richness")))
+  dat <- dat[, c("site", "garden", "treatment", "lratio","descriptor")]
+  panel_data <- rbind(dat, panel_data)
+}
+
+# Make a renamed factor variable for the treatments
+
+panel_data$ftreatment <- panel_data$treatment
+
+# Fix treatment names
+panel_data$ftreatment[panel_data$ftreatment == "i"] <- "Insects"
+panel_data$ftreatment[panel_data$ftreatment == "p"] <- "Birds, bats and ants"
+panel_data$ftreatment[panel_data$ftreatment == "f"] <- "Fungi"
+panel_data$ftreatment[panel_data$ftreatment == "h"] <- "Increased herbivory"
+panel_data$ftreatment <- factor(panel_data$ftreatment,
+                           levels = c("Fungi",
+                                      "Insects",
+                                      "Birds, bats and ants",
+                                      "Increased herbivory"
+                                      ))
+
+# Set the transparency value
+aph <- 0.5
+
+# Create a factor variable for sites
+panel_data$fsite <- factor(panel_data$site, labels = c("Low",
+                                      "Mid",
+                                      "High"))
+
+# Display panel plot
+ggplot(panel_data, aes(x = fsite, y = lratio))+
+  geom_jitter(width = 0.1, alpha = 0.1, size = 2)+
+  
+  # Group means
+  stat_summary(fun = mean, na.rm = T,
+               geom = "point", size = 2,
+               alpha = aph)+
+  
+  stat_summary(fun.data = "mean_cl_boot",
+               alpha = aph) + 
+  
+  # Annotations
+  geom_text(data = panel_data %>%
+              group_by(ftreatment, fsite) %>%
+              summarise(mlr = mean(lratio)),
+            aes(x = fsite, y = mlr + 1.5, group = ftreatment,
+                label = lrr_panel_labs),
+            size = 3)+
+  
+  theme_bw()+
+  theme(strip.text = element_text(size =5.5),
+        axis.text.x = element_text(angle = 0,
+                                   hjust = 0.5))+
+  geom_hline(yintercept = 0, lty = 2)+
+  ylab("Log response ratio")+xlab("")+
+  facet_grid(descriptor ~ ftreatment)
+
+```
+
+If we look at the biomass plots and a the effect plots we might be struck by a close relationship between some of these patterns. For example, the effect of fungi on biomass is lacking and seems exactly as the biomass patterns at each elevation. Effects of fungi, insects and predators on diversity measures seem to be inversely proportional to the patterns in diversity and density for three elevations.
+
+This may suggest a strong bottom-up control of the effect strength. The effect are present, but the local community characteristics may influence their magnitude. It seems that at the highly diverse mid elevation, the effects of biotic factor is limited. Only one outstanding effect is of insects on biomass. Highest elevation has average species richness. But this elevation seems also to have the strongest and most frequently significant effects of biotic factors. This suggests that the strength of biotic factors may be related non linearly with plant species richness.
+
+Surprising is also similarity in the effects of insects and their predators. If insects are being controlled by their top predators we should see a negative effects of insects and positive effects of predators. This results says that in the plots where the insecticide was sprayed was the same as in the enclosure, where top predators were not present. When we were constantly re-setting insects community we disturbed natural processes of interaction forming between predators and insects. There also may be an additional.
+
+# The effects of site richness and productivity of the LRR of biomass and diversity.
+
+```{r, results='asis'}
+tab_model(final.biolrr.nl.mod, final.divlrr.nl.mod)
 ```
 
 ```{r pressure, echo=FALSE, fig.width=10, fig.height=10}
-ggpubr::ggarrange(p1, p1.1,
-                  nrow = 2)
+ggpubr::ggarrange(BioPredPlot, DivPredPlot, nrow = 2,
+                  labels = c("A", "B"))
 ```
+
+A substantial amount of variation in biomass responses (LRRs) can be explained by baseline community characteristics. However in cases of 
 
