@@ -147,12 +147,33 @@ Let us look at similar models, but for each individual site, to compare the $R^2
 #   facet_grid(~Descriptor) + 
 #   theme_bw()
 
-ggplot(r2data, aes(x = Site, y = AdjR2, fill = Treatement)) +
+# ggplot(r2data,
+#        aes(x = Site, y = AdjR2, fill = Treatement)) +
+#   geom_bar(stat = 'identity') +
+#   # coord_flip() +
+#   facet_grid(vars(Descriptors), vars(Treatement)) + theme_bw() +
+#   geom_hline(yintercept =  0,
+#              lty=2)
+
+
+
+ggplot(r2data %>%
+         mutate(fDescriptors = factor(Descriptors,
+                                       labels = c("Biomass LRR",
+                                                  "Diversity LRR",
+                                                  "Richness LRR",
+                                                  "Density LRR"),
+                                       levels = c("BioLRR",
+                                                  "DivLRR",
+                                                  "RichLRR",
+                                                  "DenLRR"))), 
+       aes(x = Site, y = AdjR2, fill= Treatement)) +
   geom_bar(stat = 'identity') + 
   # coord_flip() + 
-  facet_grid(vars(Descriptors), vars(Treatement)) + theme_bw() + 
-  geom_hline(yintercept = c(-0.75, -0.5, 0, 0.5, 0.75), 
+  facet_grid(vars(fDescriptors), vars(Treatement)) + theme_bw() + 
+  geom_hline(yintercept =  0,
              lty=2)
+
 
 ```
 
@@ -180,7 +201,7 @@ Lets us investigate the effect of individual treatments on the community assembl
 
 ## Effect of biotic factors on the community assembly.
 
-First we want to know whether some treatments resulted in a statistically different communities. We build RDA models for each elevation. We evaluated which processes species competition or the species turnover were mostly affected, and we used Raup-Crick to evaluate which biotic factors can improve predictability of the successional process.
+It is obvious from the previous analyses that studied biotic factors have limited effect on the plant biomass, but have various effects on species richness and diversity. First we want to know whether some treatments resulted in a statistically different communities. We build RDA models for each elevation. We evaluated which processes species competition or the species turnover were mostly affected, and we used Raup-Crick to evaluate which biotic factors can improve predictability of the successional process.
 
 ### RDA
 
@@ -192,22 +213,133 @@ ggpubr::ggarrange(plot.list[["w"]]$sites.ord,
                   plot.list[["n"]]$sites.ord,
                   plot.list[["n"]]$species.ord,
                   plot.list[["y"]]$sites.ord,
-                  plot.list[["y"]]$species.ord, ncol = 2, nrow = 3)
+                  plot.list[["y"]]$species.ord, ncol = 2, nrow = 3,
+                  labels = c("Wanang","", "Numba","","Yawan",""))
 ```
 
-Plant communities treated with insecticide are different from the control plots at all elevations. Fungicide treated communities are differenet from the control only at the high elevation.
+Plant communities treated with insecticide are different from the control plots at all elevations. Fungicide treated communities are different from the control only at the high elevation. There are a few species that we can see from the diagrams that respond to treatements: *Pipturus argenteus* increase in abundance at the insecticide treated plots in Wanang and Yawan, *Trema orientale* in Numba, and *Piper recessum* and *Macaranga strigosa* to fungicide treatment in Yawan.
 
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Table X. Results of the Monte Carlo permutation to evaluate significance of each treatment on the plant community composition. RDA anlayses are conditioned on the garden variable.
+</p>
 ```{r, results='asis'}
 options(knitr.kable.NA = '')
-knitr::kable(anova(ord.list[["w"]], by="terms"))
-knitr::kable(anova(ord.list[["n"]], by="terms"))
-knitr::kable(anova(ord.list[["y"]], by="terms"))
+knitr::kable(anova(ord.list[["w"]], by="terms"), caption = "Wanang")
+knitr::kable(anova(ord.list[["n"]], by="terms"), caption = "Numba")
+knitr::kable(anova(ord.list[["y"]], by="terms"), caption = "Yawan")
 ```
+
+RDA tries to find a general trends, which may be difficult to evaluate because of the high variation in species composition between replications (individual experimental gardens) within a site.
+
+```{r}
+source('code/multi_site_beta.R')
+
+ggplot(vardf_full, aes(y = JaccardVar, x = Treatment, fill = Treatment))+
+  geom_col()+facet_grid(~Site)+theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Figure 6. Variance in species composition (Jaccard distance) for all pairwise comparisons between control sites at each elevation and treatment.
+</p>
+
+Variation between the sites reflects relative species richness at each elevation. Average dissimilarity is equally high for all sites and it is always more than 95%. We see that in Wanang and Yawan the variance war reduced by all treatments, but qualitatively different pattern is seen in Numba, where variance for the predator treatment was higher than in the control treatment.
 
 ### B-C
 
+In this section I will investigate whether some of studied treatments were able to reduce this dissimilarity. Further I brake it down into two components of beta diversity: gradient and balanced components (ref). Balanced component tells us how much of the dissimilarity is due to species turnover, whereas the gradient component is related to gradient changes in abundance - this would be related to changes in diversity (e.g. dominance structure changes).
+
+```{r}
+source('code/cx_beta_part.R')
+```
+
+```{r, fig.width=8, fig.height=6}
+beta.part.plot2
+```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Figure 7. All pairwise dissimilarities (Bray-Curtis) in species composition between given treatment plots at each elevation. Dissimilarities are broken down into two components: responsible for the species turnover (balanced component), and for changes in species dominance structures (gradient components). Starst indicate that a given average was significantly different from that at the control plot ($\alpha < 0.05$). To compare the averages the beta regression was used as the values for B-c are always between 0 and 1.
+</p>
+
+The figure shows different processes being affected by different treatments. In Wanang, high dissimilarity was reduced by insects, by shifts from species turnover that was reduced towards more significant changes in species composition. No visible changes in dissimilarity were found in Numba. However, there for additional herbivores, predators, and most strongly insects, species turnover increased significantly at the cost of changes in dominance structure. The same treatments in Yawan caused reduction in species turnover that were reflected in general decrease in species dissimilarity, because were not equally significantly balanced by increase in changes in dominance structure.
+
+The above analysis suggests that biotic factors may have different effects at different elevations. These effects can be related to the baseline species richness and variance in community composition. At the mid elevation, presence insects reduce species turnover and increase dominance shifts. In Yawan, where biomass accumulates more slowly, insect increase turnover that results in higher dissimilarity between plant communities. Reduction in species turnover could have two fold effects, If it is increased it may cause divergence in the compositions between sites, but the same may apply to reduced species turnover, i.e., smaller pool of species may be by chance different from site to site, thus propagating differences even further. To investigate this issue, we performed a simulation analysis using the Raup-Crick index, that measures the predictability of the assembly process.
 
 ### Raup-Crick
 
+```{r}
+all.pairs_max_accuracy <- read.csv("data/raup_crick/all.pairs_max_accuracy.csv")
+all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite, 
+                                       levels = c("w","n","y"), labels = c("Wanang",
+                                                                           "Numba",
+                                                                           "Yawan"))
+
+test.df <- data.frame()
+
+all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite, levels = c("Wanang",
+                                                  "Numba","Yawan"))
+
+for (st in unique(all.pairs_max_accuracy$fsite)){
+  for (cp in unique(all.pairs_max_accuracy$comp)){
+    
+    print(paste(st, cp))
+    
+    subdat <- all.pairs_max_accuracy %>%
+      filter(fsite == st & comp == cp)
+    
+    mod <- nlme::lme(RC ~ treatment,
+                     random = ~1|comp.id,
+                     data = subdat)
+
+    # print(t.test(RC ~ treatment, data = subdat, paired = TRUE))
+    
+    test.df <- rbind(test.df, data.frame(fsite = st,
+                                         comp = cp,
+                                         group1 = tolower(substr(cp,1,1)),
+                                         group2 = tolower(substr(cp,6,6)),
+                                         test.res = summary(mod)$tTable[2,5]))
+    
+    # print(summary(mod))
+    
+  }
+}
+
+test.df <- test.df %>%
+  mutate(label = ifelse(test.res < 0.05, "*"," "))
+test.df$fsite <- factor(test.df$fsite, levels = c("Wanang",
+                                                  "Numba",
+                                                  "Yawan"))
+
+ggplot(all.pairs_max_accuracy, aes(x = treatment, y = RC))+
+  # geom_boxplot()+
+  ylim(c(-1.25,1.5))+
+  stat_summary(fun.y = mean, na.rm = T,
+               geom = "point", size = 4)+
+  stat_summary(fun.data = "mean_cl_boot")+
+  theme_bw()+
+  ggtitle(paste("Accuracy = 0.001"))+
+  geom_hline(yintercept = 0, lty = 2)+
+  geom_hline(yintercept = 1, lty = 3)+
+  geom_hline(yintercept = -1, lty = 3)+
+  facet_grid(vars(fsite), vars(comp), scales = "free")+
+  ggpubr::stat_pvalue_manual(data = test.df[test.df$label == "*",], label = "label",
+                     y.position = 1.25, 
+                     label.size = 6)
+```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Figure X. Differences in Raup-Crick values between the control plot and treatment plots at each elevation.
+</p>
+
+In Wanang and more strongly in Yawan we see a deterministic divergence in community composition at the control plots. In Wanang only additional herbivores and predator treatments were able to shift this process towards more random. In Yawan all treatments were able to do this. IN Numba, however, baseline community was rather random, only additional herbivores were able to push it towards deterministic divergence, possibly through reducing richness of the plant community.
+
+Ok. So we know that the biotic factors have significant effect on the community composition, some of which can be better explained by the baseline characteristics of local plant community.
 
 ## Are traits better predictors of the species success?
+
+## Conclusions
+
+The surprising result that all treatments have similar effects, and only Numba shows some qualitatively different patterns in these effects. In Wanang, where species richness in the lowest, insects increased richness and fungi increased richness and density of pioneer woody plants. Nearly identical situation.
+
+Some of the effects are independent of the baseline community, but some of them are.
+
+We did not achieve an expected separation of effects in case of predator and insecticide treatment. This may be related to some additional mechanisms within the exclosures. All treatments, herbivore addition, insecticide treatmetn and predator exclosure had similar effects on plant community composition.
+
