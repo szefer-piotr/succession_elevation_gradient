@@ -789,7 +789,7 @@ Making sense out of the above:
 
 In this section we focus on plant species traits and how these can help us predict the performance of individual species at a given plot. First we attempt to predict simply whether a species, considering it's traits, will be lost, gained or will remain in various treatment plots. We used random forest to investigate the importance of traits in predicting the species faith. Prediction accuracy and classifier_RF will tell us how good well the set of traits is (and which traits are most important in predicting faith) for the faith of individuals.
 
-First we analyze only traits ignoring location. Later we can mak an attempt to see wether importance of 
+First we analyze only traits ignoring location. Later we can make an attempt to see wether importance of 
 
 ```{r}
 

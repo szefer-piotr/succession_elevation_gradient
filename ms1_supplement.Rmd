@@ -10,153 +10,52 @@ knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, results='hide'
 ```
 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE, results='hide'}
+source('code/log_ratio_extraction.R')
 source('code/lrr_and_community_chars_correlations.R')
 source('code/elevation_descriptors.R')
-source('code/log_ratio_extraction.R')
+source("code/pgls_data_prep.R")
 ```
 
 
-## Introduction
+## Elevational patterns
 
-Aim of our study was to evaluate to what extent pathogenic fungi, insect herbivores, and their predators shape community composition of pioneer stages of tropical forest regeneration. Further we were interested in the effect of natural elevation gradient on the direction and strength of these effects.
+The aim of our study was to evaluate the extent to which pathogenic fungi, insect herbivores, and their predators shape the biomass, richness, diversity, and community composition of pioneer stages in tropical forest regeneration along a natural elevation gradient.
 
-Looking at biomass, diversity (number of species and Simpson's index values), and density of woody plant species. Biomass did not change much with elevation, but diversity and density peaked at the mid elevation.
+The biomass of the control plots did not change significantly with elevation. However, richness, diversity, and density peaked at the mid-elevation. Surprisingly, the low elevation had the lowest number of pioneer woody plant species.
 
-```{r, fig.cap="Figure 1. Characteristics of three studied sites: biomass, richness, diversity (Simpson's index) and density of woody plants at the control sites."}
+```{r}
 
 ggpubr::ggarrange(bio.plot, rich.plot, div.plot, dens.plot)
 
 ```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+"Figure 1. Characteristics of three studied sites: biomass, richness, diversity (Simpson's index) and density of woody plants at the control sites."
+</p>
 
-Now lets look at the effects that the biotic factors had on the vegetation characteristics.
+Now, let's examine the effects that biotic factors had on the characteristics of vegetation.
 
-```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.cap= "Figure 2. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)", fig.width= 8, fig.height=8}
+```{r, echo=FALSE, results='hide', fig.show='all', warning=FALSE, message=FALSE, fig.width= 8, fig.height=8}
 
-# bio, dens, div, rich
-panel_data <- data.frame()
-
-dats <- list(biomass = BIOMASS.LR, 
-             denssity = DENSITY.LR, 
-             diversity = DIVERSITY.LR, 
-             richness = RICHNESS.LR)
-
-# Stack the data and rename descriptor names
-for (file in names(dats)){
-  # print(file)
-  dat <- dats[[file]]
-  dat$descriptor <- ifelse(grepl("bio", file), "Biomass",
-                           ifelse(grepl("dens", file), "Woody plant density",
-                                  ifelse(grepl("div", file),"Diversity", "Richness")))
-  dat <- dat[, c("site", "garden", "treatment", "lratio","descriptor")]
-  panel_data <- rbind(dat, panel_data)
-}
-
-# Make a renamed factor variable for the treatments
-
-panel_data$ftreatment <- panel_data$treatment
-
-# Fix treatment names
-panel_data$ftreatment[panel_data$ftreatment == "i"] <- "Insects"
-panel_data$ftreatment[panel_data$ftreatment == "p"] <- "Birds, bats and ants"
-panel_data$ftreatment[panel_data$ftreatment == "f"] <- "Fungi"
-panel_data$ftreatment[panel_data$ftreatment == "h"] <- "Increased herbivory"
-panel_data$ftreatment <- factor(panel_data$ftreatment,
-                           levels = c("Fungi",
-                                      "Insects",
-                                      "Birds, bats and ants",
-                                      "Increased herbivory"
-                                      ))
-
-# Set the transparency value
-aph <- 0.5
-
-# Create a factor variable for sites
-panel_data$fsite <- factor(panel_data$site, labels = c("Low",
-                                      "Mid",
-                                      "High"))
-
-# Display panel plot
-ggplot(panel_data, aes(x = fsite, y = lratio))+
-  geom_jitter(width = 0.1, alpha = 0.1, size = 2)+
-  
-  # Group means
-  stat_summary(fun = mean, na.rm = T,
-               geom = "point", size = 2,
-               alpha = aph)+
-  
-  stat_summary(fun.data = "mean_cl_boot",
-               alpha = aph) + 
-  
-  # Annotations
-  geom_text(data = panel_data %>%
-              group_by(ftreatment, fsite) %>%
-              summarise(mlr = mean(lratio)),
-            aes(x = fsite, y = mlr + 1.5, group = ftreatment,
-                label = lrr_panel_labs),
-            size = 3)+
-  
-  theme_bw()+
-  theme(strip.text = element_text(size =5.5),
-        axis.text.x = element_text(angle = 0,
-                                   hjust = 0.5))+
-  geom_hline(yintercept = 0, lty = 2)+
-  ylab("Log response ratio")+xlab("")+
-  facet_grid(descriptor ~ ftreatment)
+source('code/cx_lrr_panel.R')
+lrr_panel
 
 ```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+    Figure 2. Magnitude and direction of fungi, insects and their predators on biomass, richness, diversity and density of woody plants along elevation gradient: Wanang (200 m a.s.l.); Numba (750 m a.s.l.); Yawan (1900 m a.s.l.). Log response ratio is a log-ratio of a given descriptor value from plots where a biotic factor was present to where it was absent. Grey points represent empirical values. Letters indicate statistically significant ($\alpha$ = 0.05) differences for pairwise comparisons between elevations within a treatment-descriptor combination with Tukey correction for multiplicity. For better readability letters are given only in cases where any of the mean were either different form each other or different from zero. Zero effect are indicated with a dashed line. Stars in the upper index indicate significant ($\alpha$ = 0.05) differences of the effect mean from zero (significance of the effect at a given site)
+</p>
 
-If we look at the biomass plots and a the effect plots we might be struck by a close relationship between some of these patterns. For example, the effect of fungi on biomass is lacking and seems exactly as the biomass patterns at each elevation. Effects of fungi, insects and predators on diversity measures seem to be inversely proportional to the elevational patterns in diversity and density.
+There are a few interesting patterns emerging from this comparison. First is the similarity in the impacts of insects and their predators on vegetation. If insects are controlled by their higher-level predators, we would expect to observe negative effects of insects and positive effects of predators on vegetation. However, empirical patterns indicate that the plant community's response to top predators exclusion resembled that of insecticide treatment. Because of the substantial influx of insects into the experimental plots, we were unable to completely eliminate insects from the area. Rather, we induced repeated insect population reductions. It's plausible that the recurrent eradication of the insect community may have disrupted the natural processes of interaction between predators and insects, which likely play a crucial role in shaping the ecosystem's reaction to the insecticide treatment.
 
-This may suggest a strong bottom-up control of the effect strength. The effect are present, but the local community characteristics may influence their magnitude. It seems that at the highly diverse mid elevation, the effects of biotic factor is limited. Only one outstanding effect is of insects on biomass. Highest elevation has average species richness. But this elevation seems also to have the strongest and most frequently significant effects of biotic factors. This suggests that the strength of biotic factors may be related non-linearly with plant species richness.
+Secondly, patterns in richness, diversity, and density appear to be linked to patterns in the effects of treatments. For instance, the impact of fungi on richness and density of woody plants appear to be inversely related to the elevation-based patterns in diversity. We specifically observe the following relationship: high richness is associated with a weak effect, while low richness is linked to a strong effect.
 
-Surprising is also similarity in the effects of insects and their predators. If insects are being controlled by their top predators we should see a negative effects of insects and positive effects of predators. This pattern means that in the plots where the insecticide was sprayed the outcome for plant community was the same as in the enclosure, where top predators were not present. When we were constantly re-setting insects community we disturbed natural processes of interaction forming between predators and insects.
+This observation could imply a pronounced bottom-up control on the strength of these effects. While the effects are indeed present, their magnitude appears to be influenced by the specific characteristics of the local community. Notably, at the mid-elevation with high plant diversity, the impact of biotic factors are weak, except for the significant effect of insects on biomass, not observed at low and high elevations. The highest elevation, with average species richness, also exhibits the most potent and consistently significant effects of biotic factors. This suggests a possible non-linear relationship between plant species richness and the strength of biotic factors.
 
 ## The effects of site richness and productivity of the LRR of biomass and diversity.
 
-I investigated how well the actual observed effects of biotic factors can be explained by species richness and biomass of the woody plant community at the site level. Within each garden i used richness and biomass of the control plot as a predictor of the effect. These relationships can differ for treatments and sites, and can also be non-linear, all of which was allowed while defining models. Full models were then subjected to step-wise backward selection based on the AIC criterion to produce final models (Tab 1.).
-
-<p style="font-family: times, serif; font-size:11pt; font-style:italic">
-    Table 1. Models of richness and biomass and their relationships with LRR of studied treatments at different sites. Quadratic terms were allowed and slope and intercepts were allowed to differ between the sites and treatments and also between treatments within each site. The model sare results of backward selection process based on tha AIC criterion.
-</p>
-
-```{r, results='asis'}
-tab_model(final.biolrr.nl.mod, final.riclrr.nl.mod,final.divlrr.nl.mod, final.denlrr.nl.mod)
-```
-
-Based on the results we can explain much of the variance of the biomass effects of the treatments on biomass change (adjusted $R^2 = 0.615$). The least amount of variance can be explained for the diversity change (adjusted $R^2 = 0.296$). This agrees with the rather weak effects of biotic factors on biomass but more diverse and clear effects on diversity, richness and density. It is possible that the biomass is determined by the local conditions, but the assembly process is mostly affected by biotic factors.
-
-```{r pressure, echo=FALSE, fig.width=10, fig.height=15}
-ggpubr::ggarrange(BioPredPlot, RicPredPlot, DivPredPlot, DenPredPlot, 
-                  BioPredPlotR, RicPredPlotR, DivPredPlotR, DenPredPlotR,
-                  nrow = 4, ncol = 2,
-                  labels = c("A", "B", "C", "D",
-                             "E", "F", "G", "H"),
-                   common.legend = TRUE, legend="bottom")
-```
-<p style="font-family: times, serif; font-size:11pt; font-style:italic">
-    Figure 1. Predictions of the models for LRR form the Table 1.
-</p>
-
-Let us look at similar models, but for each individual site, to compare the $R^2$ values. We are interested in the adjusted $R2$ because we want to evaluate the predictive ability of the richness and biomass. Therefore, I excluded the treatment, used linear and quadratic terms and did not perform model selection. Whenever we see a large positive $R^2$ we can suspect strong bottom-up control. Low to negative adjusted $R^2$ values indicate top-down action
+To explore the potential bottom-up forcing of effect sizes, I constructed nonlinear models. These models aimed to explain the log response ratios for biomass, richness, diversity, and density solely based on the potential productivity (biomass) and species influx (richness) of the garden. Those basal characteristics can be sourced from either the control plot or all treatment plots within a garden. In the former case, we derive a 'natural' species richness and productivity, which results from the interaction of all biotic factors in a naturally restricted area equivalent to the plot size. Alternatively, considering the entire garden provides a larger sample of potential species richness and potential productivity. In the following analysis I took the second approach. I calculated models individually for each site and compared them using the adjusted $R^2$ value to assess the predictive capability of total richness and average biomass at the garden level. I incorporated linear and quadratic terms without performing any model selection. The adjusted $R^2$ value can be interpreted as a measure of the extent of bottom-up and top-down control: negative values suggest that enhancing diversity and richness deteriorates the model - a strong indicator of top-down effects. Conversely, significantly positive values indicate bottom-up control: effectively predicting changes in descriptors based on the underlying community characteristics.
 
 ```{r}
-
-# ggplot(r2data, aes(x = Site, y = AdjustedR2, fill = Site)) +
-#   geom_bar(stat = 'identity') + 
-#   coord_flip() +
-#   facet_grid(~Descriptor) + 
-#   theme_bw()
-
-# ggplot(r2data,
-#        aes(x = Site, y = AdjR2, fill = Treatement)) +
-#   geom_bar(stat = 'identity') +
-#   # coord_flip() +
-#   facet_grid(vars(Descriptors), vars(Treatement)) + theme_bw() +
-#   geom_hline(yintercept =  0,
-#              lty=2)
-
-
-
+#Treatment panels
 ggplot(r2data %>%
          mutate(fDescriptors = factor(Descriptors,
                                        labels = c("Biomass LRR",
@@ -174,36 +73,89 @@ ggplot(r2data %>%
   geom_hline(yintercept =  0,
              lty=2)
 
+# Site panels
+# ggplot(r2data %>%
+#          mutate(fDescriptors = factor(Descriptors,
+#                                        labels = c("Biomass LRR",
+#                                                   "Diversity LRR",
+#                                                   "Richness LRR",
+#                                                   "Density LRR"),
+#                                        levels = c("BioLRR",
+#                                                   "DivLRR",
+#                                                   "RichLRR",
+#                                                   "DenLRR"))), 
+#        aes(x = Treatement, y = AdjR2, fill= Site)) +
+#   geom_bar(stat = 'identity') + 
+#   # coord_flip() + 
+#   facet_grid(vars(fDescriptors), vars(Site)) + theme_bw() + 
+#   geom_hline(yintercept =  0,
+#              lty=2)
+
+```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+    Figure 3. Adjusted $R^2$ values of quadratic model of log response ratios (LRR) of pioneer plant biomass, diversity, richness and density to selected biotic factors: f- fungi; i - insects; p - predators. Natural logarithm of biomass and richness were used as only predictors of the LRR's. Quadratic terms were also introduced to allow for nonlinear responses.
+</p>
+
+The adjusted $R^2$ demonstrates significant variation across different treatments, sites, and descriptors. In terms of diversity, the impact of fungi shifts from top-down influence at low elevations to bottom-up effects at higher elevations. Notably, the effect of fungi on biomass is most pronounced at higher elevations. The influence on richness exhibits strong indications of top-down control at both low and high elevations. Conversely, at mid elevations, fungi display a weak effect on richness.
+
+Interestingly, we discover limited top-down effects of insects, except for density at mid elevations and richness at high elevations. The influence of insects on richness exhibits an elevation-dependent increase. Notably, the adjusted $R^2$ values for the effect on biomass, richness, and density in Wanang are surprisingly high (bottom-up effect). However, it's crucial to exercise caution when interpreting parameter estimates due to the small sample size of 6 gardens in Wanang and only 5 parameters for estimation. Nevertheless, it's remarkable that a quadratic plane fits exceptionally well to these six data points. Concerning diversity, a noticeable compensation effect between herbivores and fungi is evident at low elevations, which undergoes a shift at higher elevations. Predators demonstrate more pronounced effects at greater elevations, except for plant biomass, which remains low at mid and high elevations.
+
+To explain the Log Response Ratio (LRR) of biomass, diversity, richness, and density in relation to potential richness and productivity, I developed an extensive model that incorporated all relevant interactions. This model incorporated both linear and quadratic terms for both richness and productivity and interaction of these terms with site and treatment. Within each garden, I utilized the total richness and average biomass values at the garden level as predictors of the effect. Following this, the comprehensive models underwent a step-wise backward selection procedure, guided by the AIC criterion, to derive the final models (as presented in Table 1).
+
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Table 1: Models depicting the relationships between richness, biomass, and their interactions with Log Response Ratio (LRR) for the investigated treatments across distinct sites. The inclusion of quadratic terms was permitted, with variations in slopes and intercepts accounted for across sites and treatments, as well as between treatments within each site. The presented models are the outcomes of a backward selection procedure driven by the AIC criterion.
+</p>
+```{r, results='asis'}
+tab_model(final.biolrr.nl.mod, final.riclrr.nl.mod,final.divlrr.nl.mod, final.denlrr.nl.mod)
+```
+
+The outcomes allow us to account for a substantial portion of the variance in treatment effects on biomass change (adjusted $R^2 = 0.367$). Conversely, the lowest proportion of variance can be elucidated for diversity change (adjusted $R^2 = 0.296$). This discrepancy suggests considerable impacts of biotic factors on richness, whereas effects on biomass, density, and diversity are more confined. It appears that local conditions play a determining role in biomass, while biotic factors predominantly influence the assembly process.
+
+```{r pressure, echo=FALSE, fig.width=10, fig.height=15}
+ggpubr::ggarrange(BioPredPlot, RicPredPlot, DivPredPlot, DenPredPlot,
+                  BioPredPlotR, RicPredPlotR, DivPredPlotR, DenPredPlotR,
+                  nrow = 4, ncol = 2,
+                  labels = c("A", "B", "C", "D",
+                             "E", "F", "G", "H"),
+                   common.legend = TRUE, legend="bottom")
+```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+    Figure 4. Predictions of the models for LRR form the Table 1.
+</p>
+
+All plant community characteristics are interconnected. For instance, biomass is associated not only with richness but also with species composition. It tends to increase with the complexity of a plant community (Cardinale et al. 2007). 
+
+There are two non-mutually exclusive ways in which biotic factors affect plant communities: they either serve as filters for species or alter competitive outcomes among species. However, in our experiment, distinguishing between these two processes' final outcomes might be challenging without tracking species influx and mortality with a reasonable temporal resolution.
+
+Just to stay cnsostent I compared the most complex models with the simplest models to have an idea how good of predictors site and treatments are.
+
+```{r, results='asis'}
+knitr::kable(biolrr.comp, caption =  "Response: Biomass effects")
+knitr::kable(riclrr.comp, caption =  "Response: Richness effects")
+knitr::kable(divlrr.comp, caption =  "Response: Diversity effects")
+knitr::kable(denlrr.comp, caption =  "Response: Density effect")
 
 ```
 
-The adjusted $R^2$ varies a lot for different treatments, sites and descriptors. The value of the adjusted $R^2$ could be interpreted as a measure of the level of bottom-up and top-down control: negative values indicate that adding diversity and richness only makes the model worse - this is a strong indicator of top-down effects. In contrast, high positive values are indicative to bottom-up control: we can predict well changes in descriptors depending on the baseline community characteristics.
+# Treatment responses on individual species
 
-Fungi effects on diversity shifts from bottom-up at low to top-down at high elevation. Effect of fungi on biomass gets stronger with elevation. At the mid elevation insects have weak effect on richness, but stronger on diversity. 
+The previous analyses clearly indicate that the studied biotic factors exert a limited influence on plant biomass at the community level. However, they manifest diverse impacts on species richness and diversity. Our primary objective is to identify potential differences between treatment plots and controls concerning community composition.
 
-Some of the strongest top-down effects of insects on richness and diversity were found in Wanang. Effect of insect on diversity decreases with elevation, but changes non-monotonously for richness density and biomass, showing peaks in bottom-up control at mid-elevation.
+We collected traits linked to growth rate and resource acquisition, encompassing specific leaf area (SLA), water content, biomass, and herbivore damage. In this section, our focus is on plant species identity and traits, assessing their utility in predicting individual species performance within specific plots. I explore the primary predictor of treatment response: whether it is species identity, necessitating individual species-level analysis (which might be impractical), or species traits, which allows for elevation-based comparisons. This inquiry is pursued through a range of methodologies, including:
 
-For diversity there is a clear compensation of herbivores for fungi at the low elevations, that shifts at the high elevation.
+Redundancy Analysis (RDA) to discern species exhibiting directional responses to treatments.
 
-Predators have stronger effects at the higher elevations except for plant biomass, which is low at mid and high elevations.
+Correlation of RDA axes with plant species traits. Rather than considering plant IDs, we examine their traits to identify whether certain traits are correlated with the treatment effect vectors—vectors of change identified in the RDA.
 
-All of the community characteristics are interrelated. For example biomass is related to richness and also to the identity of the species involved (ref), and increases with the complexity of a plant community (Cardinale et al 2007). We see some strong indications that insects determine richness and diversity at low elevations, density and biomass at high elevation, and at the mid elevation they only affect diversity in a significant way. Changes in richness and diversity can happen in two ways: biotic factors can either be filters for species, or they can change competitive outcomes at between species. Unfortunately the end results may be the same for these two processes. 
+Employing Random Forest to establish the significance of traits in predicting categorical plant responses to treatments.
 
-What we can investigate though is what actually was more important in responding to a given treatment. Was it species identity (which basically means that we need to look at each species individually - bad) or was it some trait values. Basically what we want to do here is to see whether response to a treatment is species specific or trait specific. We could only use species that are present in at least 3 gardens at all three elevations, or within each elevation do the analysis, which is more plausible. We will look whether certain species are being excluded, or whether species composition response can be better explained by changes in plant trait composition. We will perform RDA or CCA on species id's and on species traits instead.
+Through this, I aim to predict whether a species, based on its traits, will be lost, gained, or retained across various treatment plots. To achieve this, we utilize the Random Forest algorithm to explore the importance of traits in predicting species outcomes. We assess prediction accuracy using the "classifier_RF" approach. This analysis provides insights into the effectiveness of the trait set (including the most influential traits) in predicting outcomes for individual species.
 
-These results suggest that:
-* biomass is largely bottom up controlled, but the effects of biotic factors: insects, fungi and predators are increasingly more important at the higher elevations.
-* community assembly processes seem to be more strongly affected by biotic factors.
-* some of the strongest top-down effects on diversity and richness were found at the lowest elevation for insects, and highest elevation for fungi.
-* there is a general weak bottom-up control at the highest elevation.
+Analyzing Community Weighted Means (CWMs) for trait responses across the entire community.
 
-Lets us investigate the effect of individual treatments on the community assembly process.
+Applying Phylogenetic Generalized Least Squares (PGLS) models to evaluate changes in plant species biomass based on their trait values in response to treatments.
 
-## Effect of biotic factors on the community assembly.
-
-It is obvious from the previous analyses that studied biotic factors have limited effect on the plant biomass, but have various effects on species richness and diversity. First we want to know whether some treatments resulted in a statistically different communities. We build RDA models for each elevation. We evaluated which processes species competition or the species turnover were mostly affected, and we used Raup-Crick to evaluate which biotic factors can improve predictability of the successional process.
-
-### RDA
+### 1. RDA
 
 ```{r, fig.height=10, fig.width=10}
 source('code/cx_rda_analysis.R')
@@ -216,11 +168,17 @@ ggpubr::ggarrange(plot.list[["w"]]$sites.ord,
                   plot.list[["y"]]$species.ord, ncol = 2, nrow = 3,
                   labels = c("Wanang","", "Numba","","Yawan",""))
 ```
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+    Figure 5. RDA plots with red arrows indicating statistical significance of treatments.
+</p>
 
-Plant communities treated with insecticide are different from the control plots at all elevations. Fungicide treated communities are different from the control only at the high elevation. There are a few species that we can see from the diagrams that respond to treatements: *Pipturus argenteus* increase in abundance at the insecticide treated plots in Wanang and Yawan, *Trema orientale* in Numba, and *Piper recessum* and *Macaranga strigosa* to fungicide treatment in Yawan.
+Plant communities subjected to insecticide treatments differ from the control plots across all elevations. On the other hand, communities treated with fungicide exhibit variations from the control plots solely at higher elevation. Several species show discernible responses to these treatments as observed in the diagrams:
+* *Pipturus argenteus* experiences an increase in abundance within insecticide-treated plots in Wanang and Yawan.
+* *Trema orientale* exhibits this trend in Numba.
+* *Piper recessum* and *Macaranga strigosa* demonstrate a response to fungicide treatment specifically in Yawan.
 
 <p style="font-family: times, serif; font-size:11pt; font-style:italic">
-Table X. Results of the Monte Carlo permutation to evaluate significance of each treatment on the plant community composition. RDA anlayses are conditioned on the garden variable.
+Table 2. Results of the Monte Carlo permutation to evaluate significance of each treatment on the plant community composition. RDA analyses are conditioned on the garden variable.
 </p>
 ```{r, results='asis'}
 options(knitr.kable.NA = '')
@@ -229,7 +187,68 @@ knitr::kable(anova(ord.list[["n"]], by="terms"), caption = "Numba")
 knitr::kable(anova(ord.list[["y"]], by="terms"), caption = "Yawan")
 ```
 
-RDA tries to find a general trends, which may be difficult to evaluate because of the high variation in species composition between replications (individual experimental gardens) within a site.
+As we tried to show in the previous sections t's possible that certain alterations in plant community composition could be attributed to initial variations in richness rather than the influence of a specific factor. Biotic factors could affect richness that has effect on plant species dynamics and result in changes in species composition.
+
+When we introduce the conditional impact of richness and biomass instead of garden identity, we observe the loss of significance in treatment effects. This observation could imply that insects, predators, and fungi exert a more pronounced influence on the assembly process compared to inter-specific plant interactions.
+
+<p style="font-family: times, serif; font-size:11pt; font-style:italic">
+Table 3. Results of the Monte Carlo permutation to evaluate significance of each treatment on the plant community composition. RDA analyses are conditioned on the garden species richness and average plot biomass.
+</p>
+```{r, results='asis'}
+options(knitr.kable.NA = '')
+knitr::kable(anova(result.list[["w"]], by="terms"), caption = "Wanang")
+knitr::kable(anova(result.list[["n"]], by="terms"), caption = "Numba")
+knitr::kable(anova(result.list[["y"]], by="terms"), caption = "Yawan")
+```
+
+### 2. Can traits predict change in composition?
+
+For each treatment I correlated the position of each species along an 'effect gradient' - a vector that point to same direction as a treatment, and correlated it with individual species tratits. SLA doesn’t predict RDA position along C->I, C->H, C->P, C -> F axes, at any elevation. Community composition change under a treatment may be independent of SLA - the key indicator of functionally important aspects of photosynthetic capacity, and is positively correlated with ecosystem productivity (White et al., 2000, Madani et al., 2017, Anderson et al., 2020). SLA reflects the abilities of light capture and adaption to environments of plants (Gao, Wang, and Zhang 2022)]. The regression analyses are corrected for phylogeny using the phylogenetic covariance matrix.
+
+```{r, results='asis'}
+
+source('code/cx_trait_ord.R')
+
+m1 <- traitPredsCommComp(treatment = "f",
+                             ordination = result.list,
+                             st = "wanang")
+m2 <- traitPredsCommComp(treatment = "f",
+                             ordination = result.list,
+                             st = "numba")
+m3 <- traitPredsCommComp(treatment = "f",
+                             ordination = result.list,
+                             st = "yawan")
+m4 <- traitPredsCommComp(treatment = "i",
+                             ordination = result.list,
+                             st = "wanang")
+m5 <- traitPredsCommComp(treatment = "i",
+                             ordination = result.list,
+                             st = "numba")
+m6 <- traitPredsCommComp(treatment = "i",
+                             ordination = result.list,
+                             st = "yawan")
+
+
+
+tab_model(m1$model,
+          m2$model,
+          m3$model,
+          dv.labels = c(m1$title,
+                        m2$title,
+                        m3$title))
+
+
+tab_model(m4$model,
+          m5$model,
+          m6$model,
+          dv.labels = c(m4$title,
+                        m5$title,
+                        m6$title))
+
+
+```
+
+In Numba, both Specific Leaf Area (SLA) and water content are significant predictors of a species' position along the vector of treatment effects. However, in Yawan, only water content holds significance in this regard. Otherwise, traits demonstrate limited predictive power for the ordination process. RDA tries to find a general trends, which may be difficult to evaluate because of the high variation in species composition between replications (individual experimental gardens) within a site.
 
 ```{r}
 source('code/multi_site_beta.R')
@@ -243,11 +262,241 @@ ggplot(vardf_full, aes(y = JaccardVar, x = Treatment, fill = Treatment))+
 Figure 6. Variance in species composition (Jaccard distance) for all pairwise comparisons between control sites at each elevation and treatment.
 </p>
 
-Variation between the sites reflects relative species richness at each elevation. Average dissimilarity is equally high for all sites and it is always more than 95%. We see that in Wanang and Yawan the variance war reduced by all treatments, but qualitatively different pattern is seen in Numba, where variance for the predator treatment was higher than in the control treatment.
+The variation observed among the different sites is influenced, to some extent, by the relative species richness present at each elevation. The average Bray-Curtis within treatment, within site dissimilarity holds a consistently high value of around 95%. Notably, in Wanang and Yawan, all treatments led to a reduction in variance. However, a distinct pattern emerges in Numba, where the variance under the predator treatment surpassed that of the control treatment.
 
-### B-C
+Given the potential influence of insects on the assembly process and subsequent alterations in community composition, we will later delve into the components of B-C dissimilarity and explore the assembly process itself using null models.
 
-In this section I will investigate whether some of studied treatments were able to reduce this dissimilarity. Further I brake it down into two components of beta diversity: gradient and balanced components (ref). Balanced component tells us how much of the dissimilarity is due to species turnover, whereas the gradient component is related to gradient changes in abundance - this would be related to changes in diversity (e.g. dominance structure changes).
+### 3. Random forest
+
+First we look whether some of the traits can help us understand wether some plants will be:
+* missing at the treatment plot but present at the control plot (lost);
+* present at the treatment plot but missing from the control plot (gained)
+* present in both treatment and control plot (stayed). 
+
+```{r}
+source('code/cx_random_forest.R')
+```
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+vipP <- varImpPlot(prfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the predator exclusion')
+# barplot(height = c(vipP), names.arg = rownames(vipP))
+varImpPlot(irfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the insect exclusion')
+varImpPlot(frfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the fungi exclusion')
+varImpPlot(hrfres$classifier_for_varImpPlot,
+           main = 'Variable Importance for the herbivore addition')
+
+# MDSplot(prfres$classifier_for_varImpPlot, prfres$train_data$pg.cat, 
+#         main = "Predator")
+# MDSplot(irfres$classifier_for_varImpPlot, irfres$train_data$pg.cat,
+#         main = "Insecticide")
+# MDSplot(frfres$classifier_for_varImpPlot, frfres$train_data$pg.cat,
+#         main = "Fungicide")
+# MDSplot(hrfres$classifier_for_varImpPlot, hrfres$train_data$pg.cat,
+#         main = "Herbivory")
+```
+
+```{r}
+
+pcm <- prfres$rf_confusion_matrix
+icm <- irfres$rf_confusion_matrix
+fcm <- frfres$rf_confusion_matrix
+hcm <- hrfres$rf_confusion_matrix
+
+pacc <- sum(diag(pcm))/sum(pcm)
+iacc <- sum(diag(icm))/sum(icm)
+facc <- sum(diag(fcm))/sum(fcm)
+hacc <- sum(diag(hcm))/sum(hcm)
+
+```
+
+With the variables we have collected, accurately predicting the fate of individual species remains challenging. The prediction accuracies are as follows: `r iacc` for the insecticide treatment; `r facc` for the fungicide treatment; `r pacc` for the predator treatment; and `r hacc` for the herbivore addition treatment. Notably, for all predictions, total biomass emerges as the most significant predictor of a species' fate. Conversely, SLA and the number of stems are the least influential predictors. To illustrate this division, we employ a single regression tree.
+
+### 4. Whole community trait response (CWMs)
+
+The preceding analysis focused on the individual level, aiming to anticipate whether we can predict a species' fate based on its traits. This had a moderately satisfactory level of predictive ability, with minimal discrepancies in prediction accuracy across the various treatments.
+
+Alternatively, I explore whether any of the treatments impacted the community-weighted mean for traits. This approach delves into understanding how traits at the community level were affected by the treatments.
+
+```{r, fig.cap='Community weighted mean vs number of species at a site for the studied treatments at three elevations. Size of a point indicates total plant biomass of that plot.'}
+
+source('code/cx_cwm.R')
+ggpubr::ggarrange(p1,p1.wc)
+
+
+```
+
+The Community Weighted Mean of Specific Leaf Area (CWM SLA) exhibited higher values in plots with lower diversity. This implies that species with relatively higher SLA were the dominant contributors to these communities. This pattern is also evident for water content and remains consistent regardless of the treatment or site. This trend appears to be quite widespread, suggesting that biotic factors might exert a limited impact on the trait composition itself. Instead, their influence seems to primarily affect species richness, which subsequently affects other aspects of the plant community's characteristics.
+
+```{r, results='asis'}
+# Test for the relationship and the differences
+require(sjPlot)
+cwm.lm <- lm(log(cwm.sla)~log(sp.rich)*treatment + site, data = siteSLAdf)
+cwm.lm.nosite <- lm(log(cwm.sla)~log(sp.rich)*treatment, data = siteSLAdf)
+cwm.lm.nosite.noint <- lm(log(cwm.sla)~log(sp.rich)+treatment, data = siteSLAdf)
+cwm.lm.onlysp <- lm(log(cwm.sla)~log(sp.rich), data = siteSLAdf)
+
+
+# cwm.glm <- glm(cwm.sla~sp.rich*treatment + site, data = siteSLAdf,
+#              family = gaussian(link = 'log'))
+# cwm.glm.nosite <- glm(cwm.sla~sp.rich*treatment, data = siteSLAdf,
+#                     family = gaussian(link = 'log'))
+# cwm.glm.nosite.noint <- glm(cwm.sla~sp.rich+treatment, data = siteSLAdf, 
+#                           family = gaussian(link = 'log'))
+# cwm.glm.onlysp <- glm(cwm.sla~sp.rich, data = siteSLAdf, family = gaussian(link = 'log'))
+
+# tab_model(cwm.lm.nosite.noint)
+
+
+# anova(cwm.lm.nosite, cwm.lm.onlysp)
+knitr::kable(AIC(cwm.lm, cwm.lm.nosite, cwm.lm.nosite.noint, cwm.lm.onlysp))
+# knitr::kable(AIC(cwm.glm, cwm.glm.nosite, cwm.glm.nosite.noint, cwm.glm.onlysp,
+                 # cwm.lm, cwm.lm.nosite, cwm.lm.nosite.noint, cwm.lm.onlysp))
+
+# tab_model(cwm.glm)
+tab_model(cwm.lm.onlysp)
+
+# plot(cwm.glm)
+# plot(cwm.lm)
+
+# there are no differences 
+
+```
+
+### 5. Individual species performance baed on taits
+
+In control plots with increasing elevation, we hypothesized that Specific Leaf Area (SLA), serving as a proxy for growth rate, will progressively become a stronger predictor of various aspects of species' success. This includes factors such as fitness, dominance, and changes in biomass in response to treatments. More specifically, we expect that plants with higher SLA will demonstrate an enhanced capability to dominate the community, as reflected by higher total biomass in scenarios where natural enemies have been removed. In these situations, we assume that interspecific plant competition will be primarily influenced by differences in growth rates.
+
+For a more comprehensive measurement of a species' response to a treatment, change in biomass (delta biomass) might be a superior metric. This measurement excludes species that were either lost or gained in response to treatments. However, the prior analysis has indicated that these plants tend to be relatively small, often in poor condition or newly established in a plot. Several challenges complicate the interpretation of this relationship. To mitigate these issues, incorporating covariates into the model of biomass change can offer some improvement.
+
+1. **Richness**: The Specific Leaf Area (SLA) of a species might be influenced by the characteristics of the community it inhabits, as indicated by both Community Weighted Mean (CWM) traits and their dependency on species richness. However, at the individual level, we do not observe any alteration in the SLA of individual species in response to the richness of the plot. This implies that the increased CWM SLA in low richness plots is driven by the dominance of high SLA plants rather than changes in the SLA of the dominants. This aligns with the absence of discernible differences in community composition, that would be captured if changes in species composition were more based on changes in dominance structure.
+
+It's worth noting that the lack of significant treatment effects in the RDA analysis could potentially be attributed to substantial variation between gardens, especially evident in the control sites with high variability. To address this, incorporating the identity of an experimental plot as a co-variate in the model could be beneficial.
+
+```{r}
+
+# SLA of selected species at different treatments.
+
+# Sla of selected species vs species richness
+
+```
+
+2. **Change in SLA**: From our data, it is apparent that certain treatments can lead to variations in the average Specific Leaf Area (SLA) of the same species. This change in SLA has the potential to impact the alteration in biomass, or conversely, changes in biomass might influence SLA. Importantly, this dynamic relationship extends to the two other traits as well. Therefore, it's crucial to consider all relevant traits when assessing these interactions.
+
+```{r}
+
+# Change in SLA vs change in Biomass
+
+```
+
+3. **Abundance**: Biomass/$\Delta$Biomass ratios might be reduced when there is a higher density of individuals from the same species in the vicinity. Consequently, I believe it's important to incorporate the influence of co-specifics’ abundance in our analysis.
+
+4. **Total biomass**: Furthermore, the productivity of a site (total biomass) could also impact the change in biomass; for instance, the change in biomass might be less pronounced for smaller plants and more significant for larger plants. Regarding the interpretation of these measures.
+
+Delta BIO quantifies how dominance within the community has changed due to the treatment. If there was a plant that was dominant in the control condition and its biomass experienced a substantial reduction in response to the treatment, this would signify that the treatment had a notable effect on diminishing the dominance of that specific plant in the community. In essence, it indicates a shift in the plant's importance or influence within the community due to the treatment's impact on its biomass.
+
+Taking the aforementioned considerations into consideration, we have formulated the final statistical model. In this model, the response variable is $\Delta$Biomass. We assess its dependence on SLA while incorporating the corresponding site richness and abundance of co-specifics as covariates. To examine the influence of treatments on the relationship between $\Delta$Biomass and SLA, we introduce the interaction between SLA and the treatment variable. This model is replicated for each site, and we evaluate its performance to compare the predictive power of SLA for biomass changes across elevations. In order to maintain phylogenetic correlations, we include a quadratic term.
+
+Furthermore, I explore nonlinear relationships between biomass log-ratios and species traits. The inclusion of these nonlinear relationships allows for the consideration of optimal trait values. All these insights lead us to define the comprehensive structure of the final model.
+
+$\Delta$Biomass ~ SLA $\times$ site + SLA^2 $\times$ site + 
+water.content $\times$ site + water.content^2 $\times$ site + 
+perc.herb $\times$ site  + perc.herb^2 $\times$ site + 
+richness + abundance + $\Delta$SLA + 
+(Phylogenetic structure). 
+
+This model needs to be fit independently for each treatment to calculate the respective changes in SLA and biomass.
+
+There is some evidence pointing towards changes in total biomass being influenced by SLA. Both water content and log-response ratios of SLA significantly impact changes in total biomass. However, it's important to note that these changes could potentially be driven by a strong correlation in a single site, Wanang. Specifically, higher water content leads to positive changes in species biomass, while a substantial increase in SLA of a species correlates with a reduction in that species' biomass. Notably, none of the interactions with site were found to be significant.
+
+In terms of random effects, they might not be necessary given the paired comparisons of control vs. treatment within the same garden. Another option would be to incorporate the site as a random factor, which could lead to the elimination of all interaction terms.
+
+It is important to acknowledge that if we analyze the data separately for each elevation, the results might differ, especially if we solely rely on the variable lsla.d. More comprehensive models, such as those encompassing the effects of species richness and other traits, as discussed earlier, could potentially alter this relationship.
+
+```{r, results='asis'}
+
+source('code/cx_sla_pgls.R')
+
+# Plot
+ggpubr::ggarrange(pslap +
+                    scale_y_continuous(limits = c(-5, 10)),
+                  fwaterp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hwaterp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(psitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  fsitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hsitep + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1,legend = F)
+ggpubr::ggarrange(prichp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  frichp + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(plabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  ilabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hlabup + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, legend = F)
+ggpubr::ggarrange(plrrslap +
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  hlrrslap + 
+                    scale_y_continuous(limits = c(-5, 10)), 
+                  nrow = 1, common.legend = T)
+
+```
+
+```{r, results = 'asis'}
+
+tab_model(p.mod, i.mod, h.mod, f.mod,
+          pred.labels = c("Intercept", 
+                          "Log[SLA]-linear", 
+                          "Numba", 
+                          "Yawan",
+                          "Log[SLA]-quadratic", 
+                          "Water content - linear", 
+                          "Water content - quadratic",
+                          "Herbivory [%] - linear",
+                          "Herbivory [%] - quadratic",
+                          "Species richness",
+                          "Abundance",
+                          "LRR SLA",
+                          "Log[SLA]-linear : Numba",
+                          "Log[SLA]-linear : Yawan",
+                          "Log[SLA]-quadratic : Numba",
+                          "Log[SLA]-quadratic : Yawan",
+                          "Water content-linear : Numba",
+                          "Water content-linear : Yawan",
+                          "Water content-quadratic : Numba",
+                          "Water content-quadratic : Yawan",
+                          "Herbivory-linear : Numba",
+                          "Herbivory-linear : Yawan",
+                          "Herbivory-quadratic : Numba",
+                          "Herbivory-quadratic : Yawan"),
+          dv.labels = c("Predator", "Insecticide", "Extra herbivory", "Fungicide"),
+          string.pred = "Coeffcient",
+          string.ci = "Conf. Int (95%)",
+          string.p = "P-Value")
+
+```
+
+
+## Effect of biotic factors on the community assembly.
+
+We employed beta-diversity partitioning techniques to assess the predominant influences on processes, namely species competition and species turnover. Subsequently, we delve into the enhancement of predictability for the successional process by evaluating the impact of biotic factors using the Raup-Crick index.
+
+### 1. B-C
+
+
+In this section, I will explore whether any of the studied treatments have the capacity to mitigate this dissimilarity. Moreover, I will dissect this dissimilarity into its two constituent components of beta diversity, known as the gradient and balanced components (as referenced). The balanced component provides insight into the extent of dissimilarity attributed to species turnover, while the gradient component pertains to shifts in abundance gradients. This latter aspect is connected to alterations in diversity, such as changes in the dominance structure.
 
 ```{r}
 source('code/cx_beta_part.R')
@@ -260,86 +509,33 @@ beta.part.plot2
 Figure 7. All pairwise dissimilarities (Bray-Curtis) in species composition between given treatment plots at each elevation. Dissimilarities are broken down into two components: responsible for the species turnover (balanced component), and for changes in species dominance structures (gradient components). Starst indicate that a given average was significantly different from that at the control plot ($\alpha < 0.05$). To compare the averages the beta regression was used as the values for B-c are always between 0 and 1.
 </p>
 
-The figure shows different processes being affected by different treatments. In Wanang, high dissimilarity was reduced by insects, by shifts from species turnover that was reduced towards more significant changes in species composition. No visible changes in dissimilarity were found in Numba. However, there for additional herbivores, predators, and most strongly insects, species turnover increased significantly at the cost of changes in dominance structure. The same treatments in Yawan caused reduction in species turnover that were reflected in general decrease in species dissimilarity, because were not equally significantly balanced by increase in changes in dominance structure.
+The figure illustrates distinct impacts on various processes attributed to different treatments. In Wanang, high dissimilarity is mitigated by insects, leading to a transition from significant species turnover towards more substantial shifts in species composition. Conversely, in Numba, no apparent alterations in dissimilarity were observed. However, the introduction of additional herbivores, predators, and particularly insects led to a noteworthy increase in species turnover while simultaneously causing changes in dominance structure. These same treatments in Yawan led to a decrease in species turnover, contributing to a general reduction in species dissimilarity. However, these reductions were not equally balanced by significant changes in dominance structure.
 
-The above analysis suggests that biotic factors may have different effects at different elevations. These effects can be related to the baseline species richness and variance in community composition. At the mid elevation, presence insects reduce species turnover and increase dominance shifts. In Yawan, where biomass accumulates more slowly, insect increase turnover that results in higher dissimilarity between plant communities. Reduction in species turnover could have two fold effects, If it is increased it may cause divergence in the compositions between sites, but the same may apply to reduced species turnover, i.e., smaller pool of species may be by chance different from site to site, thus propagating differences even further. To investigate this issue, we performed a simulation analysis using the Raup-Crick index, that measures the predictability of the assembly process.
+The comprehensive analysis implies that biotic factors can yield varying effects at different elevations. These effects may be correlated with the initial species richness and the community composition's variance. At mid elevations, the presence of insects reduces species turnover and promotes shifts in dominance. In Yawan, where biomass accumulation is slower, insects increase turnover, subsequently resulting in heightened dissimilarity between plant communities. Alterations in species turnover can have dual consequences: if it increases, it could drive divergence in compositions between sites; conversely, reduced species turnover might also magnify differences by chance, due to the inherently smaller pool of species being distinct from site to site, thus amplifying dissimilarities.
 
-### Raup-Crick
+To further investigate this matter, we conducted a simulation analysis employing the Raup-Crick index, which gauges the predictability of the assembly process.
+
+### 2. Raup-Crick
 
 ```{r}
-all.pairs_max_accuracy <- read.csv("data/raup_crick/all.pairs_max_accuracy.csv")
-all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite, 
-                                       levels = c("w","n","y"), labels = c("Wanang",
-                                                                           "Numba",
-                                                                           "Yawan"))
+source('code/cx_rcplot.R')
 
-test.df <- data.frame()
+rcplot
 
-all.pairs_max_accuracy$fsite <- factor(all.pairs_max_accuracy$fsite, levels = c("Wanang",
-                                                  "Numba","Yawan"))
-
-for (st in unique(all.pairs_max_accuracy$fsite)){
-  for (cp in unique(all.pairs_max_accuracy$comp)){
-    
-    print(paste(st, cp))
-    
-    subdat <- all.pairs_max_accuracy %>%
-      filter(fsite == st & comp == cp)
-    
-    mod <- nlme::lme(RC ~ treatment,
-                     random = ~1|comp.id,
-                     data = subdat)
-
-    # print(t.test(RC ~ treatment, data = subdat, paired = TRUE))
-    
-    test.df <- rbind(test.df, data.frame(fsite = st,
-                                         comp = cp,
-                                         group1 = tolower(substr(cp,1,1)),
-                                         group2 = tolower(substr(cp,6,6)),
-                                         test.res = summary(mod)$tTable[2,5]))
-    
-    # print(summary(mod))
-    
-  }
-}
-
-test.df <- test.df %>%
-  mutate(label = ifelse(test.res < 0.05, "*"," "))
-test.df$fsite <- factor(test.df$fsite, levels = c("Wanang",
-                                                  "Numba",
-                                                  "Yawan"))
-
-ggplot(all.pairs_max_accuracy, aes(x = treatment, y = RC))+
-  # geom_boxplot()+
-  ylim(c(-1.25,1.5))+
-  stat_summary(fun.y = mean, na.rm = T,
-               geom = "point", size = 4)+
-  stat_summary(fun.data = "mean_cl_boot")+
-  theme_bw()+
-  ggtitle(paste("Accuracy = 0.001"))+
-  geom_hline(yintercept = 0, lty = 2)+
-  geom_hline(yintercept = 1, lty = 3)+
-  geom_hline(yintercept = -1, lty = 3)+
-  facet_grid(vars(fsite), vars(comp), scales = "free")+
-  ggpubr::stat_pvalue_manual(data = test.df[test.df$label == "*",], label = "label",
-                     y.position = 1.25, 
-                     label.size = 6)
 ```
 <p style="font-family: times, serif; font-size:11pt; font-style:italic">
 Figure X. Differences in Raup-Crick values between the control plot and treatment plots at each elevation.
 </p>
 
-In Wanang and more strongly in Yawan we see a deterministic divergence in community composition at the control plots. In Wanang only additional herbivores and predator treatments were able to shift this process towards more random. In Yawan all treatments were able to do this. IN Numba, however, baseline community was rather random, only additional herbivores were able to push it towards deterministic divergence, possibly through reducing richness of the plant community.
+In Wanang and even more notably in Yawan, we observe a deterministic divergence in community composition within the control plots. In Wanang, only the additional herbivores and predator treatments managed to shift this process towards a more random pattern. In Yawan, all treatments achieved this outcome. In Numba, on the other hand, the baseline community displayed a relatively random pattern, and only the addition of herbivores managed to nudge it towards deterministic divergence, potentially by reducing the richness of the plant community.
 
-Ok. So we know that the biotic factors have significant effect on the community composition, some of which can be better explained by the baseline characteristics of local plant community.
+With this understanding, we now recognize that biotic factors exert a significant influence on community composition. These alterations are contingent upon the baseline community richness and the productivity of the site. Biotic factors impact the assembly process by modifying the richness of pioneer communities at both the highest and lowest elevations, albeit to a lesser extent in the latter. At the mid elevation, the considerable variation in community composition appears to attenuate the effects of biotic factors.
 
-## Are traits better predictors of the species success?
+Our findings highlight that biotic factors indeed can significantly affect richness, and these effects subsequently trigger shifts in community composition. We are now interested in understanding whether specific traits undergo filtration or perform better under these conditions. Furthermore, we aim to investigate which traits emerge after filtration and how they are subsequently suppressed.
 
-## Conclusions
+## Discussion
 
-The surprising result that all treatments have similar effects, and only Numba shows some qualitatively different patterns in these effects. In Wanang, where species richness in the lowest, insects increased richness and fungi increased richness and density of pioneer woody plants. Nearly identical situation.
+The unexpected outcome reveals that all treatments yield comparable effects, with Numba displaying some distinct patterns in these effects. In Wanang, where species richness is the lowest, insects led to an increase in richness, while fungi prompted enhancements in both richness and the density of pioneer woody plants. These situations are nearly identical in nature.
 
-Some of the effects are independent of the baseline community, but some of them are.
-
-We did not achieve an expected separation of effects in case of predator and insecticide treatment. This may be related to some additional mechanisms within the exclosures. All treatments, herbivore addition, insecticide treatmetn and predator exclosure had similar effects on plant community composition.
+Surprisingly, the anticipated differentiation in effects between predator and insecticide treatments was not achieved. This could potentially be linked to additional mechanisms operating within the exclosure setups. Strikingly, all treatments—herbivore addition, insecticide treatment, and predator exclosure—exerted analogous effects on plant community composition.
 

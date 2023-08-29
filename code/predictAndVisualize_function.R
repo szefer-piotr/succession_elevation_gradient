@@ -61,7 +61,7 @@ predictAndVisualize <- function (model,
                              levels = c("wanang", "numba", "yawan"))
     
     # Predict values for the newly created data.
-    predvals <- predictSE.gls(model, newdata = preddata)
+    predvals <- AICcmodavg::predictSE.gls(model, newdata = preddata)
     preddata$predvals <- predvals$fit
     preddata$predse <- predvals$se.fit
     
@@ -83,7 +83,7 @@ predictAndVisualize <- function (model,
     
   } else {
     preddata <- deltaData
-    predvals <- predictSE.gls(model, newdata = deltaData)
+    predvals <- AICcmodavg::predictSE.gls(model, newdata = deltaData)
     preddata$predvals <- predvals$fit
     preddata$predse <- predvals$se.fit
     

@@ -1,16 +1,24 @@
 # RDA analysis
-source('code/log_ratio_extraction.R')
+# source('code/log_ratio_extraction.R')
 
 library(vegan)
 library(cowplot)
 library(ggplot2)
 
 # 1. Load the data
-COMMDATA <- t(COMMDATA)
-COMMVARS
+COMMDATAt <- t(COMMDATA)
+# COMMVARS
 
+# Add variables for richness, and biomass 
+# (BUT DOES IT NEEDS TO BE DONE ONLY FOR CONTROL? Or FULL species richness and average biomass?)
+COMMVARS$richness <- rowSums(COMMDATAt>0)[COMMVARS$plotid]
+COMMVARS$biomass <- rowSums(COMMDATAt)[COMMVARS$plotid]
+
+COMMVARS$logR <- log(COMMVARS$richness)
+COMMVARS$logB <- log(COMMVARS$biomass)
+ 
 # Select only i,c,p,f
-COMM.SEL <- COMMDATA[grepl("i|c$|p|f|_h", rownames(COMMDATA)), ]
+COMM.SEL <- COMMDATAt[grepl("i|c$|p|f|_h", rownames(COMMDATAt)), ]
 VARS.SEL <- COMMVARS[grepl("i|c$|p|f|_h", COMMVARS$plotid), ]
 
 treats.to.consider <- c("i","c","h","f","p")
@@ -28,6 +36,20 @@ COMMVARS <- COMMVARS %>%
 ## 3.1 Analyses for each elevation
 ord.list <- list()
 plot.list <- list()
+result.list <- list()
+# How to approach it? Differnt model candidates
+# rdamod0 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(garden + logR + logB),
+#               data = SUB.VARS)
+# rdamod1 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(logR + logB),
+#               data = SUB.VARS)
+# rdamod2 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+logR+logB+Condition(garden),
+#                data = SUB.VARS)
+# rdamod3 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+logR+logB,
+#                data = SUB.VARS)
+# anova(rdamod0, by='terms')
+# anova(rdamod1, by='terms')
+# anova(rdamod2, by='terms')
+# anova(rdamod3, by='terms')
 
 for(site.id in substr(unique(COMMVARS$site),1,1)){
   
@@ -36,17 +58,24 @@ for(site.id in substr(unique(COMMVARS$site),1,1)){
   SUB.VARS <- COMMVARS %>%
     filter(grepl(paste('^', site.id, sep = ""), site) & treatment %in% treats.to.consider)
   
-  SUB.DATA <- COMMDATA[SUB.VARS$plotid, ]
+  SUB.DATA <- COMMDATAt[SUB.VARS$plotid, ]
   SUB.DATA <- decostand(SUB.DATA, method = 'hellinger')
   # Perform RDA and ANOVA and print the results
-  rdamod <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(garden), 
-                data = SUB.VARS)
   
+  rdamod <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(garden),
+                data = SUB.VARS)
+
+  rdamod2 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+Condition(logR + logB),
+               data = SUB.VARS)
+  
+  # rdamod2 <- rda(as.data.frame(SUB.DATA)~f+h+p+i+logR+logB,
+  #                data = SUB.VARS)
+  # 
   ord.list[[site.id]] <- rdamod
   
-  h <- how(blocks = SUB.VARS$garden)
+  # h <- how(blocks = SUB.VARS$garden)
   
-  # print(anova(rdamod, permutations = h, by = "terms"))
+  result.list[[site.id]] <- rdamod2
   
   # Goodness
   gdnsof <- goodness(rdamod, model = "CCA", proportional = T)
