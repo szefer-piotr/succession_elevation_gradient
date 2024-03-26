@@ -85,9 +85,11 @@ for (st in unique(lgsData$site)){
     if (subsetVars[2] == "h"){
       cDat$lrrtb <- log(tDat$tot_bio/cDat$tot_bio)
       cDat$lrrsla <- log(tDat$sla.d.m2kg1/cDat$sla.d.m2kg1)
+      cDat$lrrwtrc <- log(tDat$water.cont/cDat$water.cont)
     } else{
       cDat$lrrtb <- log(cDat$tot_bio/tDat$tot_bio)
       cDat$lrrsla <- log(cDat$sla.d.m2kg1/tDat$sla.d.m2kg1)
+      cDat$lrrwtrc <- log(cDat$water.cont/tDat$water.cont)
     }
     
     deltaData <- rbind(deltaData, cDat)

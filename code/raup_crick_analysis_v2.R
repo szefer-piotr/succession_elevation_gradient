@@ -1,12 +1,13 @@
 rm(list = ls())
 
 # Start with Wanang C and I
-source("code/data_processing.R")
+# source("code/data_processing.R")
+source("code/prepare_data.R")
 COMMDATA <- t(COMMDATA)
 
 # This script performs RC analysis on the experimental elevation plots.
 # For each plot comparison within the same treatment I constrained the
-# plant data to species and biomass observed within the SITE (but not garden).
+# plant data to species and biomass observed within the SITE (not garden, not only gardern).
 # This included all treatments to obtain the most reliable species list for
 # random sampling.
 
@@ -19,9 +20,12 @@ getPlantMat <- function (COMMDATA, site) {
   return(COMMDATA[c1, ])
 }
 
+
+siteCode="wanang_g1_c"
+
 ### Assemble function
 assemble <- function (siteCode,
-                      plant_mat, # subset (either within garden/or within)
+                      plant_mat, # sampling community (either within garden/site/treatment)
                       accuracy = 0.001){
   
   # Samples random community with constraints defined by the given site code:
@@ -176,7 +180,7 @@ pb <- txtProgressBar(min = 0,      # Minimum value of the progress bar
                      style = 3,    # Progress bar style (also available style = 1 and style = 2)
                      width = 50,   # Progress bar width. Defaults to getOption("width")
                      char = "=")
-
+row = 1
 for(row in 1:dim(all.pairs)[1]){
   
   site1 <- all.pairs[row, 1]
@@ -279,6 +283,7 @@ for (st in unique(all.pairs_max_accuracy$fsite)){
                      data = subdat)
 
     # print(t.test(RC ~ treatment, data = subdat, paired = TRUE))
+    print(summary(mod))
     
     test.df <- rbind(test.df, data.frame(fsite = st,
                                          comp = cp,
@@ -311,3 +316,22 @@ ggplot(all.pairs_max_accuracy, aes(x = treatment, y = RC))+
   ggpubr::stat_pvalue_manual(data = test.df[test.df$label == "*",], label = "label",
                      y.position = 1.25, 
                      label.size = 6)
+
+
+
+
+ggplot(all.pairs_max_accuracy, aes(x = treatment, y = RC))+
+  # geom_boxplot()+
+  ylim(c(-1.25,1.5))+
+  stat_summary(fun.y = mean, na.rm = T,
+               geom = "point", size = 4)+
+  stat_summary(fun.data = "mean_cl_boot")+
+  theme_bw()+
+  ggtitle(paste("Accuracy = 0.001"))+
+  geom_hline(yintercept = 0, lty = 2)+
+  geom_hline(yintercept = 1, lty = 3)+
+  geom_hline(yintercept = -1, lty = 3)+
+  facet_grid(fsite ~ comp, scales = "free")+
+  ggpubr::stat_pvalue_manual(data = test.df[test.df$label == "*",], label = "label",
+                             y.position = 1.25, 
+                             label.size = 6)

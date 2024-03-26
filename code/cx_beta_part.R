@@ -183,21 +183,34 @@ pairwise.comp.res.rf <- pairwise.comp.res %>%
                                "Fungi",
                                ifelse(y_loc_trt == '_h', "Herbivores",
                                       ifelse(y_loc_trt == '_i', "Insecticide",'Predator')))),
-         component = ifelse(component == 'balanced', "Species turnover (balanced component)",
-                            ifelse(component == "gradient", "Dominance shifts (gradient component)",
-                                   "Bray-Curtis dissimilarty")))
+         component = ifelse(component == 'balanced', "Species turnover",
+                            ifelse(component == "gradient", "Dominance shifts",
+                                   "Bray-Curtis Ind.")))
 
+colors <- c("gray30", "gray","gray","red","gray",
+            "gray30", "gray","gray","gray","gray",
+            "gray30", "gray","red","red","gray",
+            "gray30", "gray","gray","red","gray",
+            "gray30", "gray","gray","red","red",
+            "gray30", "gray","gray","gray","gray",
+            "gray30", "gray","gray","gray","gray",
+            "gray30", "gray","red","red","red",
+            "gray30", "gray","red","red","red")
 
 # Alternative boxplot
 beta.part.plot2 <- ggplot(beta.df.rf, aes(x = treat, y = vals))+
   # geom_jitter(width = 0.1, alpha = 0.1, color = "navyblue")+
   stat_summary(fun.y = mean, na.rm = T,
-               geom = "point", size = 3, col = "gray30")+
-  stat_summary(fun.data = "mean_cl_boot", col = "gray30")+
-  geom_text(data = pairwise.comp.res.rf,
-            aes(x = y_loc_trt, y = y_loc + 0.15,
-                label = label), cex = 6,  col = "red")+
+               geom = "point", size = 5, col = colors)+
+  stat_summary(fun.data = "mean_cl_boot", col = colors, lwd = 1.1)+
+  # geom_text(data = pairwise.comp.res.rf,
+  #           aes(x = y_loc_trt, y = y_loc + 0.15,
+  #               label = label), cex = 6,  col = "red")+
   facet_grid(component ~ fsite, scales = 'free',
              labeller = label_wrap_gen(25)) + 
-  theme_bw()+ theme(axis.text.x = element_text(angle=90, hjust =1 ))
+  theme_bw()+ theme(axis.text.x = element_text(angle=90, hjust =1 )) + 
+  xlab("") + ylab("")
+
+tiff('beta-fig.tiff', width = 4*480, height=4*480, res=300)
 beta.part.plot2
+dev.off()

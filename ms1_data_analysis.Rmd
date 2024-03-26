@@ -1065,6 +1065,82 @@ Our original idea was that SLA (approximation of a growth rate) should become a 
 
 ## SLA
 
+### Are there differences in trait values between elevations?
+
+```{r}
+
+logit <- function(p){
+  return(log(p/(1-p)))
+}
+
+
+trait_data <- data.woody.brut %>%
+         mutate(fsite = factor(site, levels=c("wanang","numba","yawan")),
+                perc_wc = water.cont/wet_leafg) %>%
+         filter(treatment == "c",
+                perc_wc > 0,
+                unified_names != "piper_aduncum")
+
+
+sla_plot <- ggplot(trait_data, aes(y=log(sla.d.m2kg1), x = fsite)) +
+  geom_jitter(alpha = 0.3,pch=19) +
+  theme_classic() + ggtitle("SLA")
+wc_plot <- ggplot(trait_data, aes(y=logit(perc_wc), x = fsite)) +
+  geom_jitter(alpha = 0.3,pch=19) +
+  theme_classic()+ ggtitle("Logit[proportional water content]")
+
+jpeg('figures/sla_wc_elevation.jpg')
+ggpubr::ggarrange(sla_plot, wc_plot)
+dev.off()
+```
+
+```{r}
+# test with pgls model
+
+trait_data_tl <- trait_data %>%
+  filter(unified_names %in% myTree.rand.poly$tip.label)
+
+trait_elevation_model <- gls(
+    log(sla.d.m2kg1) ~ fsite,
+    data = trait_data_tl,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+trait_elevation_model2 <- gls(
+    logit(perc_wc) ~ fsite,
+    data = trait_data_tl,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# summary(trait_elevation_model)
+# plot(trait_elevation_model) # better fit for log
+
+posthoc_test <- predictmeans::predictmeans(trait_elevation_model, "fsite", adj='tukey')$mean_table$Table
+
+posthoc_test2 <- predictmeans::predictmeans(trait_elevation_model2, "fsite", adj='tukey')$mean_table$Table
+
+sla_ph <- ggplot(as.data.frame(posthoc_test), aes(x = fsite, y = Mean)) +
+  geom_errorbar(aes(ymin=Mean-SE, ymax=Mean+SE), width=.05) +
+  geom_point()
+
+wc_ph <- ggplot(as.data.frame(posthoc_test2), aes(x = fsite, y = Mean)) +
+  geom_errorbar(aes(ymin=Mean-SE, ymax=Mean+SE), width=.05) +
+  geom_point()
+
+ggpubr::ggarrange(sla_ph, wc_ph, labels = c("SLA", "WC"))
+
+```
+
 ### Can traits predict change in composition?
 SLA doesn’t predict RDA position along C->I, C->H, C->P, C -> F axes, at any elevation.
 Community composition change under a treatment may be independent of SLA. [key indicator of functionally important aspects of photosynthetic capacity, and is positively correlated with ecosystem productivity (White et al., 2000, Madani et al., 2017, Anderson et al., 2020). Reflects the abilities of light capture and adaption to environments of plants (Gao, Wang, and Zhang 2022)]
@@ -1265,41 +1341,333 @@ source('code/get_data_ready_for_the_sla_analyses.R')
 
 ```
 
+```{r}
+source('code/model_definitions_pgls_no_herb.R')
+
+moddata_w <- moddata[moddata$site == "wanang", ]
+moddata_n <- moddata[moddata$site == "numba", ]
+moddata_y <- moddata[moddata$site == "yawan", ]
+
+null_w <- gls(
+    lrrtb ~ 1,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_w <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_n <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_y <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# Compare MSE only models with quadratic and 
+wanang_mse <- mean(just_traits_w$residuals^2)
+numba_mse <- mean(just_traits_n$residuals^2)
+yawan_mse <- mean(just_traits_y$residuals^2)
+
+
+# MSE for models with traits and all other descriptors
+full_model_w <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_n <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_y <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# MSE for models without the traits but all other descriptors
+desc_model_w <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_n <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_y <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+
+# Compare MSE only models with quadratic and 
+wanang_full_mse <- mean(full_model_w$residuals^2)
+numba_full_mse <- mean(full_model_n$residuals^2)
+yawan_full_mse <- mean(full_model_y$residuals^2)
+
+# Compare MSE only models with desc
+wanang_desc_mse <- mean(desc_model_w$residuals^2)
+numba_desc_mse <- mean(desc_model_n$residuals^2)
+yawan_desc_mse <- mean(desc_model_y$residuals^2)
+
+mse_data_i = data.frame(Site = factor(c("Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan"),levels = c("Wanang", "Numba", "Yawan")),
+           MSE = c(wanang_mse, numba_mse,yawan_mse,                          
+                   wanang_full_mse, numba_full_mse, yawan_full_mse,
+                   wanang_desc_mse, numba_desc_mse, yawan_desc_mse),
+           Model = c("Traits","Traits","Traits",
+                     "Traits+Descriptors","Traits+Descriptors","Traits+Descriptors",
+                     "Descriptors","Descriptors","Descriptors"),
+           Treatment = "Insecticide")
+
+ggplot(mse_data_i, aes(x = Site, y = MSE, fill = Model))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  theme_bw() + ggtitle("Insecticide")
+
+```
+
+```{r}
+# 
+# 
+# just_traits_w_l <- gls(
+#     lrrtb ~ sla.d.m2kg1 + water.cont,
+#     data = moddata_w,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_sla_w <- gls(
+#     lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2),
+#     data = moddata_w,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_sla_w_l <- gls(
+#     lrrtb ~ sla.d.m2kg1,
+#     data = moddata_w,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_wc_w <- gls(
+#     lrrtb ~ water.cont + I(water.cont^2),
+#     data = moddata_w,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_wc_w_l <- gls(
+#     lrrtb ~ water.cont,
+#     data = moddata_w,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# 
+# # Traits are better
+# anova(null_w, just_traits_w)
+# 
+# # Quadratic + two traits is better
+# anova(just_traits_w, just_traits_w_l)
+# anova(just_traits_w, just_sla_w)
+# anova(just_traits_w, just_wc_w)
+# anova(just_traits_w, just_sla_w_l)
+# anova(just_traits_w, just_wc_w_l)
+# 
+# RsquareAdj(just_traits_w)
+# 
+# sjPlot::tab_model(just_traits_w,
+#                   just_traits_w_l)
+# 
+# 
+
+```
+
+```{r}
+
+# All sites
+# 
+# null_traits <- gls(
+#     lrrtb ~ 1,
+#     data = moddata,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   ) 
+# 
+# just_traits.q.no_int <- gls(
+#     lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+#     data = moddata,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# 
+# just_traits.l.no_int <- gls(
+#     lrrtb ~ sla.d.m2kg1 + water.cont,
+#     data = moddata,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_traits.q <- gls(
+#     lrrtb ~ sla.d.m2kg1 * site + 
+#       I(sla.d.m2kg1^2) * site + 
+#       water.cont * site + 
+#       I(water.cont^2) * site,
+#     data = moddata,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# 
+# just_traits.l <- gls(
+#     lrrtb ~ sla.d.m2kg1 * site + water.cont *  site,
+#     data = moddata,
+#     method = "ML",
+#     correlation = corMartins(2.718282,
+#                              phy = myTree.rand.poly,
+#                              form = ~unified_names,
+#                              fixed = T),
+#     na.action = na.omit
+#   )
+# 
+# just_sla.q
+# 
+# sjPlot::tab_model(just_traits)
+
+```
+
 ```{r, results='asis'}
-
-source('code/model_definitions_pgls.R')
-
 # Are traits improving the null model
 
 # Model selection.
 
 # 1. Full model (quadratic, and site interactions) vs no traits
-# anova(no.traits, full.model)            # full model is better
+anova(no.traits, full.model)            # full model is better
 
 
 # 2. Removal of individual traits
 
 # 2.1 Remove SLA
-# anova(full.model, q.herb.q.water) # no-difference, keep model without the SLA a simpler model?
-# 2.2 Remove herbivory
-# anova(full.model, q.sla.q.water.noint) # Model without herbivory is significantly worse
+anova(full.model, just.water.quadratic) # full_model
+
 # 2.3 Remove water content?
-# anova(full.model, q.sla.q.herb) # Model without water is significantly worse
-
-# Herbivory and water are the most important!!!
-
-# 3. Reduce model even further - 1 trait models.
-# anova(q.herb.q.water, just.sla.quadratic)   # Two trait model better
-# anova(q.herb.q.water, just.herb.quadratic)  # Two trait model better
-# anova(q.herb.q.water, just.water.quadratic) # Two trait model better
+anova(full.model, just.sla.quadratic) # No significant difference
 
 # 4. Quadratic vs linear
-# anova(q.herb.q.water, l.herb.l.water) # Quadratic model is still better
+anova(just.sla.quadratic, just.sla.linear) # Quadratic model is still better
 
 # 5. Interaction reduction
-# anova(q.herb.q.water, q.herb.q.water.noint) # Model with interaction is better
-# anova(q.herb.q.water, just.water.quadratic.noint) # Model with interaction is better
-# anova(q.herb.q.water, just.water.linear.noint)
+anova(just.sla.quadratic, just.sla.quadratic.noint) # Model with interaction is better
+
 
 ```
 
@@ -1307,7 +1675,7 @@ source('code/model_definitions_pgls.R')
 # So the best model is the one without the traits!
 # tab_model(q.herb.q.water)
 # tab_model(just.water.quadratic.noint)
-i.mod <- q.herb.q.water
+i.mod <- just.sla.quadratic
 i.dD <- deltaData
 ```
 
@@ -1337,50 +1705,176 @@ source('code/get_data_ready_for_the_sla_analyses.R')
 
 ```
 
+
+```{r}
+
+source('code/model_definitions_pgls_no_herb.R')
+
+moddata_w <- moddata[moddata$site == "wanang", ]
+moddata_n <- moddata[moddata$site == "numba", ]
+moddata_y <- moddata[moddata$site == "yawan", ]
+
+null_w <- gls(
+    lrrtb ~ 1,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_w <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_n <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_y <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# Compare MSE only models with quadratic and 
+wanang_mse <- mean(just_traits_w$residuals^2)
+numba_mse <- mean(just_traits_n$residuals^2)
+yawan_mse <- mean(just_traits_y$residuals^2)
+
+
+# MSE for models with traits and all other descriptors
+full_model_w <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_n <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_y <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# MSE for models without the traits but all other descriptors
+desc_model_w <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_n <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_y <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+
+# Compare MSE only models with quadratic and 
+wanang_full_mse <- mean(full_model_w$residuals^2)
+numba_full_mse <- mean(full_model_n$residuals^2)
+yawan_full_mse <- mean(full_model_y$residuals^2)
+
+# Compare MSE only models with desc
+wanang_desc_mse <- mean(desc_model_w$residuals^2)
+numba_desc_mse <- mean(desc_model_n$residuals^2)
+yawan_desc_mse <- mean(desc_model_y$residuals^2)
+
+mse_data_f = data.frame(Site = factor(c("Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan"),levels = c("Wanang", "Numba", "Yawan")),
+           MSE = c(wanang_mse, numba_mse,yawan_mse,                          
+                   wanang_full_mse, numba_full_mse, yawan_full_mse,
+                   wanang_desc_mse, numba_desc_mse, yawan_desc_mse),
+           Model = c("Traits","Traits","Traits",
+                     "Traits+Descriptors","Traits+Descriptors","Traits+Descriptors",
+                     "Descriptors","Descriptors","Descriptors"),
+           Treatment = "Fungi")
+
+ggplot(mse_data_f, aes(x = Site, y = MSE, fill = Model))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  theme_bw() + ggtitle("Fungi")
+
+```
+
+
 ```{r, results='asis'}
 
-source('code/model_definitions_pgls.R')
+source('code/model_definitions_pgls_no_herb.R')
 
 # Are traits improving the null model
 
 # Model selection.
 
 # 1. Full model (quadratic, and site interactions) vs no traits
-# anova(no.traits, full.model)            # full model is better
-
-
-# 2. Removal of individual traits
-
-# 2.1 Remove SLA
-# anova(full.model, q.herb.q.water) # without sla is slightly better (AIC)
-
-# 2.2 Remove herbivory
-# anova(full.model, q.sla.q.water) # Model without herbivory is not better
-
-# Both q.herb.q.water and q.sla.q.water are simpler, but which one is better?
-# anova(full.model, q.sla.q.herb) # Model without water is significantly worse
-
-# 2.3 Remove water content?
-# anova(full.model, q.sla.q.herb) # Model with herbivory is much better!
-# Water is important!!!
-
-# anova(q.herb.q.water, q.sla.q.water) # q.sla.q.water is better based on AIC
-
-
-# 3. Reduce model even further - 1 trait models.
-# anova(q.sla.q.water, just.sla.quadratic)  # q.sla.q.water is still better
-# anova(q.sla.q.water, just.herb.quadratic) # q.sla.q.water is still better
-# anova(q.sla.q.water, just.water.quadratic) # model with just water is as good as q.sla.q.water
-
-# model with just water is not different form the full model, and it has lower AIC
-
-# Seems like they all stay!
-
-# 4. Quadratic vs linear
-# anova(just.water.quadratic, just.water.linear) # Linear is simpler model still better
-
-# 5. Interaction reduction
-# anova(just.water.linear, just.water.linear.noint) # Interaction does not bring anything to the model
+anova(no.traits, full.model)            
+# model with traits does not have a significantly higher likelihood.
 
 ```
 
@@ -1389,7 +1883,7 @@ source('code/model_definitions_pgls.R')
 
 # So the best model is the one with only water!
 # tab_model(just.water.linear.noint)
-f.mod <- just.water.linear.noint
+f.mod <- no.traits
 f.dD <- deltaData
 ```
 
@@ -1405,16 +1899,174 @@ source('code/get_data_ready_for_the_sla_analyses.R')
 
 ```
 
+```{r}
+
+source('code/model_definitions_pgls_no_herb.R')
+
+moddata_w <- moddata[moddata$site == "wanang", ]
+moddata_n <- moddata[moddata$site == "numba", ]
+moddata_y <- moddata[moddata$site == "yawan", ]
+
+null_w <- gls(
+    lrrtb ~ 1,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_w <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_n <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_y <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# Compare MSE only models with quadratic and 
+wanang_mse <- mean(just_traits_w$residuals^2)
+numba_mse <- mean(just_traits_n$residuals^2)
+yawan_mse <- mean(just_traits_y$residuals^2)
+
+
+# MSE for models with traits and all other descriptors
+full_model_w <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_n <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_y <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# MSE for models without the traits but all other descriptors
+desc_model_w <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_n <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_y <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+
+# Compare MSE only models with quadratic and 
+wanang_full_mse <- mean(full_model_w$residuals^2)
+numba_full_mse <- mean(full_model_n$residuals^2)
+yawan_full_mse <- mean(full_model_y$residuals^2)
+
+# Compare MSE only models with desc
+wanang_desc_mse <- mean(desc_model_w$residuals^2)
+numba_desc_mse <- mean(desc_model_n$residuals^2)
+yawan_desc_mse <- mean(desc_model_y$residuals^2)
+
+mse_data_h = data.frame(Site = factor(c("Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan"),levels = c("Wanang", "Numba", "Yawan")),
+           MSE = c(wanang_mse, numba_mse,yawan_mse,                          
+                   wanang_full_mse, numba_full_mse, yawan_full_mse,
+                   wanang_desc_mse, numba_desc_mse, yawan_desc_mse),
+           Model = c("Traits","Traits","Traits",
+                     "Traits+Descriptors","Traits+Descriptors","Traits+Descriptors",
+                     "Descriptors","Descriptors","Descriptors"),
+           Treatment = "Herbivore")
+
+ggplot(mse_data_h, aes(x = Site, y = MSE, fill = Model))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  theme_bw() + ggtitle("Herbivore")
+
+```
+
+
 ```{r, results='asis'}
 
-source('code/model_definitions_pgls.R')
+source('code/model_definitions_pgls_no_herb.R')
 
 # Are traits improving the null model
 
 # Model selection.
 
 # 1. Full model (quadratic, and site interactions) vs no traits
-# anova(no.traits, full.model)            # full model is better
+anova(no.traits, full.model)            # full model is better
 
 
 # 2. Removal of individual traits
@@ -1448,7 +2100,7 @@ source('code/model_definitions_pgls.R')
 ```{r, results='asis'}
 # So the best model is ... !
 # tab_model(just.water.linear)
-h.mod <- just.water.linear
+h.mod <- no.traits
 h.dD <- deltaData
 ```
 
@@ -1464,41 +2116,204 @@ source('code/get_data_ready_for_the_sla_analyses.R')
 
 ```
 
+```{r}
+
+source('code/model_definitions_pgls_no_herb.R')
+
+moddata_w <- moddata[moddata$site == "wanang", ]
+moddata_n <- moddata[moddata$site == "numba", ]
+moddata_y <- moddata[moddata$site == "yawan", ]
+
+null_w <- gls(
+    lrrtb ~ 1,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_w <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_n <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+just_traits_y <- gls(
+    lrrtb ~ sla.d.m2kg1 + I(sla.d.m2kg1^2) + water.cont + I(water.cont^2),
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# Compare MSE only models with quadratic and 
+wanang_mse <- mean(just_traits_w$residuals^2)
+numba_mse <- mean(just_traits_n$residuals^2)
+yawan_mse <- mean(just_traits_y$residuals^2)
+
+
+# MSE for models with traits and all other descriptors
+full_model_w <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_n <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+full_model_y <- gls(
+    lrrtb ~ lsla.d + I(lsla.d^2) + water.cont + I(water.cont^2) +
+      richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+# MSE for models without the traits but all other descriptors
+desc_model_w <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_w,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_n <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_n,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+desc_model_y <- gls(
+    lrrtb ~ richness + labu + lrrsla + lrrwtrc,
+    data = moddata_y,
+    method = "ML",
+    correlation = corMartins(2.718282,
+                             phy = myTree.rand.poly,
+                             form = ~unified_names,
+                             fixed = T),
+    na.action = na.omit
+  )
+
+
+# Compare MSE only models with quadratic and 
+wanang_full_mse <- mean(full_model_w$residuals^2)
+numba_full_mse <- mean(full_model_n$residuals^2)
+yawan_full_mse <- mean(full_model_y$residuals^2)
+
+# Compare MSE only models with desc
+wanang_desc_mse <- mean(desc_model_w$residuals^2)
+numba_desc_mse <- mean(desc_model_n$residuals^2)
+yawan_desc_mse <- mean(desc_model_y$residuals^2)
+
+mse_data_p = data.frame(Site = factor(c("Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan",
+                    "Wanang", "Numba", "Yawan"),levels = c("Wanang", "Numba", "Yawan")),
+           MSE = c(wanang_mse, numba_mse,yawan_mse,                          
+                   wanang_full_mse, numba_full_mse, yawan_full_mse,
+                   wanang_desc_mse, numba_desc_mse, yawan_desc_mse),
+           Model = c("Traits","Traits","Traits",
+                     "Traits+Descriptors","Traits+Descriptors","Traits+Descriptors",
+                     "Descriptors","Descriptors","Descriptors"),
+           Treatment = "Predator")
+
+ggplot(mse_data_p, aes(x = Site, y = MSE, fill = Model))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  theme_bw() + ggtitle("Predator")
+
+```
+
+```{r}
+
+mse_data_full <- rbind(mse_data_p, mse_data_f, mse_data_i, mse_data_h)
+
+ggplot(mse_data_full, aes(x = Site, y = 1/MSE, fill = Model))+
+  geom_bar(stat = 'identity', position = 'dodge')+
+  theme_bw() + facet_wrap(~Treatment)
+
+# ggplot(mse_data_full, aes(x = Site, y = MSE, fill = Treatment))+
+#   geom_bar(stat = 'identity', position = 'dodge')+
+#   theme_bw() + facet_wrap(~Model, scales='free')
+
+
+```
+
+
 ```{r, results='asis'}
 
-source('code/model_definitions_pgls.R')
+source('code/model_definitions_pgls_no_herb.R')
 
 # Are traits improving the null model
 
 # Model selection.
 
 # 1. Full model (quadratic, and site interactions) vs no traits
-# anova(no.traits, full.model)            # full model is better
+anova(no.traits, full.model)            # full model is better
 
 
 # 2. Removal of individual traits
 
 # 2.1 Remove SLA
-# anova(full.model, q.herb.q.water) # Full model is significanlty better
+anova(full.model, just.water.quadratic) # Full model is significanlty better
 
 # 2.2 Remove herbivory
-# anova(full.model, q.sla.q.water.noint) # Full model still better
-
-# 2.3 Remove water content?
-# anova(full.model, q.sla.q.herb) # Full model still better
-
-# 3. Reduce model even further - 1 trait models.
-# anova(full.model, just.sla.quadratic)
-# anova(full.model, just.herb.quadratic)
-# anova(full.model, just.water.quadratic)
-
-# Seems like they all stay!
+anova(full.model, just.sla.quadratic) # Full model still better
 
 # 4. Quadratic vs linear
-# anova(full.model, all.linear) # Full model still better
+anova(full.model, all.linear) # Full model still better
 
 # 5. Interaction reduction
-# anova(full.model, full.model.noint) # Full model still better
+anova(full.model, full.model.noint) # Full model still better
 ```
 
 ```{r, results='asis'}
@@ -1520,11 +2335,10 @@ tab_model(p.mod, i.mod, h.mod, f.mod,
                           "Log[SLA]-quadratic", 
                           "Water content - linear", 
                           "Water content - quadratic",
-                          "Herbivory [%] - linear",
-                          "Herbivory [%] - quadratic",
                           "Species richness",
                           "Abundance",
-                          "LRR SLA",
+                          "Plasticity in SLA",
+                          "Plasticity in WTR.C",
                           "Log[SLA]-linear : Numba",
                           "Log[SLA]-linear : Yawan",
                           "Log[SLA]-quadratic : Numba",
@@ -1532,15 +2346,39 @@ tab_model(p.mod, i.mod, h.mod, f.mod,
                           "Water content-linear : Numba",
                           "Water content-linear : Yawan",
                           "Water content-quadratic : Numba",
-                          "Water content-quadratic : Yawan",
-                          "Herbivory-linear : Numba",
-                          "Herbivory-linear : Yawan",
-                          "Herbivory-quadratic : Numba",
-                          "Herbivory-quadratic : Yawan"),
-          dv.labels = c("Predator", "Insecticide", "Extra herbivory", "Fungicide"),
-          string.pred = "Coeffcient",
+                          "Water content-quadratic : Yawan"),
           string.ci = "Conf. Int (95%)",
           string.p = "P-Value")
+
+# tab_model(p.mod, i.mod, h.mod, f.mod,
+#           pred.labels = c("Intercept", 
+#                           "Log[SLA]-linear", 
+#                           "Numba", 
+#                           "Yawan",
+#                           "Log[SLA]-quadratic", 
+#                           "Water content - linear", 
+#                           "Water content - quadratic",
+#                           "Herbivory [%] - linear",
+#                           "Herbivory [%] - quadratic",
+#                           "Species richness",
+#                           "Abundance",
+#                           "LRR SLA",
+#                           "Log[SLA]-linear : Numba",
+#                           "Log[SLA]-linear : Yawan",
+#                           "Log[SLA]-quadratic : Numba",
+#                           "Log[SLA]-quadratic : Yawan",
+#                           "Water content-linear : Numba",
+#                           "Water content-linear : Yawan",
+#                           "Water content-quadratic : Numba",
+#                           "Water content-quadratic : Yawan",
+#                           "Herbivory-linear : Numba",
+#                           "Herbivory-linear : Yawan",
+#                           "Herbivory-quadratic : Numba",
+#                           "Herbivory-quadratic : Yawan"),
+#           dv.labels = c("Predator", "Insecticide", "Extra herbivory", "Fungicide"),
+#           string.pred = "Coeffcient",
+#           string.ci = "Conf. Int (95%)",
+#           string.p = "P-Value")
 
 ```
 
@@ -1554,148 +2392,177 @@ pslap <- predictAndVisualize(p.mod,
                     p.dD,
                     "lsla.d",
                     n = 100,
-                    titlestring = "Predator - Specific Leaf Area",
+                    titlestring = "Predators",
                     ylabstring = "Log-response ratio of total biomass.",
                     xlabstring = "Log(SLA)")
 
+pwaterp <- predictAndVisualize(p.mod, 
+                    p.dD,
+                    "water.cont",
+                    n = 100,
+                    titlestring = "Predators",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Water content")
+
+islap <- predictAndVisualize(i.mod, 
+                    i.dD,
+                    "lsla.d",
+                    n = 100,
+                    titlestring = "Insecticide",
+                    ylabstring = "Log-response ratio of total biomass.",
+                    xlabstring = "Log(SLA)")
+
+# tiff(filename="figures/traits_pgls.tiff",
+#      height=2600,
+#      width=3*2600,
+#      units='px',
+#      res=800,compression='lzw')
+# ggpubr::ggarrange(pslap +
+#                     scale_y_continuous(limits = c(-5, 10)),
+#                   pwaterp +
+#                     scale_y_continuous(limits = c(-5, 10)),
+#                   islap +
+#                     scale_y_continuous(limits = c(-5, 10)),
+#                   nrow = 1, legend = F)
+# dev.off()
 
 # Focal traits
 
-# Co-variates
-psitep <- predictAndVisualize(p.mod, 
-                    p.dD,
-                    "fsite",
-                    n = 100,
-                    titlestring = "Predator - Site",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Sites")
-
-plabup <- predictAndVisualize(p.mod, 
-                    p.dD,
-                    "labu",
-                    n = 100,
-                    titlestring = "Predator - Abundance",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Log(stem number)")
-prichp <- predictAndVisualize(p.mod, 
-                    p.dD,
-                    "richness",
-                    n = 100,
-                    titlestring = "Predator - Richness",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Number od species")
-plrrslap <- predictAndVisualize(p.mod, 
-                    p.dD,
-                    "lrrsla",
-                    n = 100,
-                    titlestring = "Predator - LRR SLA",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "LRR SLA")
-
-
-# Insecticide-----------------------
-ilabup <- predictAndVisualize(i.mod, 
-                    i.dD,
-                    "labu",
-                    n = 100,
-                    titlestring = "Insecticide - Abundance",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Log(stem number)")
-
-
-
-# Extra herbivory-------------------
-hsitep <- predictAndVisualize(h.mod, 
-                    h.dD,
-                    "fsite",
-                    n = 100,
-                    titlestring = "Herbivory - Site",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Sites")
-
-hwaterp <- predictAndVisualize(h.mod, 
-                    h.dD,
-                    "water.cont",
-                    n = 100,
-                    titlestring = "Herbivory - Water Content",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Water content")
-
-
-hlabup <- predictAndVisualize(h.mod, 
-                    h.dD,
-                    "labu",
-                    n = 100,
-                    titlestring = "Herbivory - Abundance",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Log(stem number)")
-
-hlrrslap <- predictAndVisualize(h.mod, 
-                    h.dD,
-                    "lrrsla",
-                    n = 100,
-                    titlestring = "Herbivory - LRR SLA",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "LRR SLA")
-
-# Fungicide
-
-fwaterp <- predictAndVisualize(f.mod, 
-                    f.dD,
-                    "water.cont",
-                    n = 100,
-                    titlestring = "Fungicide - Water Content",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Water content")
-
-fsitep <- predictAndVisualize(f.mod, 
-                    f.dD,
-                    "fsite",
-                    n = 100,
-                    titlestring = "Fungicide - Site",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Site")
-
-frichp <- predictAndVisualize(f.mod, 
-                    f.dD,
-                    "richness",
-                    n = 100,
-                    titlestring = "Fungicide - Richness",
-                    ylabstring = "Log-response ratio of total biomass.",
-                    xlabstring = "Number of species per plot")
-
-# Plot
-ggpubr::ggarrange(pslap +
-                    scale_y_continuous(limits = c(-5, 10)),
-                  fwaterp + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  hwaterp + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  nrow = 1, legend = F)
-ggpubr::ggarrange(psitep + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  fsitep + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  hsitep + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  nrow = 1,legend = F)
-ggpubr::ggarrange(prichp + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  frichp + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  nrow = 1, legend = F)
-ggpubr::ggarrange(plabup + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  ilabup + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  hlabup + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  nrow = 1, legend = F)
-ggpubr::ggarrange(plrrslap +
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  hlrrslap + 
-                    scale_y_continuous(limits = c(-5, 10)), 
-                  nrow = 1, common.legend = T)
+# # Co-variates
+# psitep <- predictAndVisualize(p.mod, 
+#                     p.dD,
+#                     "fsite",
+#                     n = 100,
+#                     titlestring = "Predator - Site",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Sites")
+# 
+# plabup <- predictAndVisualize(p.mod, 
+#                     p.dD,
+#                     "labu",
+#                     n = 100,
+#                     titlestring = "Predator - Abundance",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Log(stem number)")
+# prichp <- predictAndVisualize(p.mod, 
+#                     p.dD,
+#                     "richness",
+#                     n = 100,
+#                     titlestring = "Predator - Richness",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Number od species")
+# plrrslap <- predictAndVisualize(p.mod, 
+#                     p.dD,
+#                     "lrrsla",
+#                     n = 100,
+#                     titlestring = "Predator - LRR SLA",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "LRR SLA")
+# 
+# 
+# # Insecticide-----------------------
+# ilabup <- predictAndVisualize(i.mod, 
+#                     i.dD,
+#                     "labu",
+#                     n = 100,
+#                     titlestring = "Insecticide - Abundance",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Log(stem number)")
+# 
+# 
+# 
+# # Extra herbivory-------------------
+# hsitep <- predictAndVisualize(h.mod, 
+#                     h.dD,
+#                     "fsite",
+#                     n = 100,
+#                     titlestring = "Herbivory - Site",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Sites")
+# 
+# hwaterp <- predictAndVisualize(h.mod, 
+#                     h.dD,
+#                     "water.cont",
+#                     n = 100,
+#                     titlestring = "Herbivory - Water Content",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Water content")
+# 
+# 
+# hlabup <- predictAndVisualize(h.mod, 
+#                     h.dD,
+#                     "labu",
+#                     n = 100,
+#                     titlestring = "Herbivory - Abundance",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Log(stem number)")
+# 
+# hlrrslap <- predictAndVisualize(h.mod, 
+#                     h.dD,
+#                     "lrrsla",
+#                     n = 100,
+#                     titlestring = "Herbivory - LRR SLA",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "LRR SLA")
+# 
+# # Fungicide
+# 
+# fwaterp <- predictAndVisualize(f.mod, 
+#                     f.dD,
+#                     "water.cont",
+#                     n = 100,
+#                     titlestring = "Fungicide - Water Content",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Water content")
+# 
+# fsitep <- predictAndVisualize(f.mod, 
+#                     f.dD,
+#                     "fsite",
+#                     n = 100,
+#                     titlestring = "Fungicide - Site",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Site")
+# 
+# frichp <- predictAndVisualize(f.mod, 
+#                     f.dD,
+#                     "richness",
+#                     n = 100,
+#                     titlestring = "Fungicide - Richness",
+#                     ylabstring = "Log-response ratio of total biomass.",
+#                     xlabstring = "Number of species per plot")
+# 
+# # Plot
+# ggpubr::ggarrange(pslap +
+#                     scale_y_continuous(limits = c(-5, 10)),
+#                   fwaterp + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   hwaterp + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   nrow = 1, legend = F)
+# ggpubr::ggarrange(psitep + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   fsitep + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   hsitep + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   nrow = 1,legend = F)
+# ggpubr::ggarrange(prichp + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   frichp + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   nrow = 1, legend = F)
+# ggpubr::ggarrange(plabup + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   ilabup + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   hlabup + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   nrow = 1, legend = F)
+# ggpubr::ggarrange(plrrslap +
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   hlrrslap + 
+#                     scale_y_continuous(limits = c(-5, 10)), 
+#                   nrow = 1, common.legend = T)
 
 ```
 
